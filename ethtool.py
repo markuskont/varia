@@ -22,7 +22,7 @@ def update():
         if not data: continue
         name = data.group(1)
         value = data.group(2)
-        #pp.add_int(oid, value)
+        #pp.add_cnt_32(oid, value)
 
 def main():
     update()
