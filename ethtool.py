@@ -13,6 +13,12 @@ def execute_command():
     
     return os.popen(cmd).read()
 
+#def gen_ord(argv):
+#
+#    oid="."    
+#    for a in name:
+#        oid= oid.join(ord(a))
+
 def update():
 
     stats=execute_command()
@@ -22,7 +28,7 @@ def update():
         if not data: continue
         name = data.group(1)
         value = data.group(2)
-        #pp.add_cnt_32(oid, value)
+        #pp.add_cnt_32ibit(oid, value)
 
 def main():
     update()
