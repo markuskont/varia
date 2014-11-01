@@ -2,6 +2,13 @@
 
 import sys, os, re
 
+try:
+    import snmp_passpersist as snmp
+except:
+    print "no snmp-passpersist module installed:"
+    print "pip install snmp-passpersist"
+
+
 # Simply get all SMART data for device
 def read_smart():
     cmd='ethtool -S wlan0'
