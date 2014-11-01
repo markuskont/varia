@@ -8,19 +8,19 @@ except:
     print "no snmp-passpersist module installed:"
     print "pip install snmp-passpersist"
 
-
-# Simply get all SMART data for device
 def read_smart():
     cmd='ethtool -S wlan0'
     
     return os.popen(cmd).read()
 
-# check if device is HDD or SSD
-
 def main():
     stats=read_smart()
 
-    print stats
+    for line in stats.split("\n"):
+        data = re.match('\s+(\w+): (\d+)', line)
+        if not data: continue
+        name = data.group(1)
+        value = data.group(2)
 
 if __name__ == "__main__":
     main()
