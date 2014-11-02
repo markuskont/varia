@@ -15,10 +15,11 @@ def execute_command():
 
 def gen_oid(argv):
 
-    #oid="."    
+    oid=""    
     for a in argv:
-        oid=ord(a)
-        print oid
+        oid+= "." + str(ord(a))
+
+    return oid
 
 def update():
 
@@ -26,11 +27,12 @@ def update():
 
     for line in stats.split("\n"):
         data = re.match('\s+(\w+): (\d+)', line)
-        if not data: continue
+        if not data: 
+            continue
         name = data.group(1)
         value = data.group(2)
-        gen_oid(name)
-        #pp.add_cnt_32ibit(oid, value)
+        oid = gen_oid(name)
+        #pp.add_cnt_64bit(oid, value)
 
 def main():
     update()
