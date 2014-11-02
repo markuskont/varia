@@ -39,7 +39,5 @@ def update():
                  ".".join([str(ord(a)) for a in name]))
         pp.add_cnt_64bit(oid, value)
 
-update()
-
 pp = snmp.PassPersist('.1.3.6.1.4.1.39178.100.1.1.1.2')
 pp.start(update, 10)
