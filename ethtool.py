@@ -17,15 +17,13 @@ def gen_oid(argv):
 
     oid=""    
     for a in argv:
-        oid+= "." + str(ord(a))
+        oid+= ".".join(str(ord(a)))
 
     return oid
 
 def update():
 
     stats=execute_command()
-    # temp
-    index=1
 
     for line in stats.split("\n"):
         data = re.match('\s+(\w+): (\d+)', line)
@@ -33,10 +31,7 @@ def update():
             continue
         name = data.group(1)
         value = int(data.group(2))
-        #oid = gen_oid(name)
-        # temp
-        oid = "%d.%s" % (index,
-                 ".".join([str(ord(a)) for a in name]))
+        oid = gen_oid(name)
         pp.add_cnt_64bit(oid, value)
 
 pp = snmp.PassPersist('.1.3.6.1.4.1.39178.100.1.1.1.2')
