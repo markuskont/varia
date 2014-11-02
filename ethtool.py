@@ -13,11 +13,12 @@ def execute_command():
     
     return os.popen(cmd).read()
 
-#def gen_ord(argv):
-#
-#    oid="."    
-#    for a in name:
-#        oid= oid.join(ord(a))
+def gen_oid(argv):
+
+    #oid="."    
+    for a in argv:
+        oid=ord(a)
+        print oid
 
 def update():
 
@@ -28,11 +29,11 @@ def update():
         if not data: continue
         name = data.group(1)
         value = data.group(2)
+        gen_oid(name)
         #pp.add_cnt_32ibit(oid, value)
 
 def main():
     update()
-
 
 if __name__ == "__main__":
     main()
