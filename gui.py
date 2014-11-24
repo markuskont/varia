@@ -1,29 +1,54 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Simple GUI test with tkinter module
+# Just testin around
+# From http://sebsauvage.net/python/gui/
 
-from Tkinter import *
-import random
+import Tkinter
 
-def callback(obj, array):
+class simpleapp_tk(Tkinter.Tk):
+    def __init__(self,parent):
+        Tkinter.Tk.__init__(self,parent)
+        self.parent = parent
+        self.initialize()
 
-	kysimus = random.choice(array)
+    def initialize(self):
+        self.grid()
 
-	w = Label(obj, text=kysimus)
-	w.pack()
+        self.entryVariable = Tkinter.StringVar()
+        self.entry = Tkinter.Entry(self,textvariable=self.entryVariable)
+        self.entry.grid(column=0,row=0,sticky='EW')
+        self.entry.bind("<Return>", self.OnPressEnter)
+        self.entryVariable.set(u"Enter text here.")
 
-def main():
+        button = Tkinter.Button(self,text=u"Click me !",
+                                command=self.OnButtonClick)
+        button.grid(column=1,row=0)
 
-	kysimused = ['Mis mõttes mis jaaaaa?', 'Oi kui armas', 'Mõtle midagi paremat välja', 'Kalasaba']
+        self.labelVariable = Tkinter.StringVar()
+        label = Tkinter.Label(self,textvariable=self.labelVariable,
+                              anchor="w",fg="white",bg="blue")
+        label.grid(column=0,row=1,columnspan=2,sticky='EW')
+        self.labelVariable.set(u"Hello !")
 
-	master = Tk()
+        self.grid_columnconfigure(0,weight=1)
+        self.resizable(True,False)
+        self.update()
+        self.geometry(self.geometry())       
+        self.entry.focus_set()
+        self.entry.selection_range(0, Tkinter.END)
 
-	b = Button(master, text="Vasta", width=25, command=callback(master, kysimused))
-	b.pack()
+    def OnButtonClick(self):
+        self.labelVariable.set( self.entryVariable.get()+" (You clicked the button)" )
+        self.entry.focus_set()
+        self.entry.selection_range(0, Tkinter.END)
 
-	mainloop()
-
+    def OnPressEnter(self,event):
+        self.labelVariable.set( self.entryVariable.get()+" (You pressed ENTER)" )
+        self.entry.focus_set()
+        self.entry.selection_range(0, Tkinter.END)
 
 if __name__ == "__main__":
-	main()
+    app = simpleapp_tk(None)
+    app.title('my application')
+    app.mainloop()
