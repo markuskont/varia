@@ -1,32 +1,29 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 # Simple GUI test with tkinter module
 
-import Tkinter
+from Tkinter import *
+import random
 
-def textinput():
-	print hi
+def callback(obj, array):
 
-def main(argv):
-	window = Tkinter.Tk()
-	
-	# text input
+	kysimus = random.choice(array)
 
-	Tkinter.Label(window, text="First").grid(row=0)
-	Tkinter.Label(window, text="Second").grid(row=1)
+	w = Label(obj, text=kysimus)
+	w.pack()
 
-	e1 = Tkinter.Entry(window)
-	e2 = Tkinter.Entry(window)
+def main():
 
- 	e1.grid(row=0, column=1)
- 	e2.grid(row=1, column=1)
+	kysimused = ['Mis mõttes mis jaaaaa?', 'Oi kui armas', 'Mõtle midagi paremat välja', 'Kalasaba']
 
-	#label.grid()
-	#label.entry = Tkinter.Entry(label)
-	#label.entry.grid(column=0,row=0,sticky='EW')
+	master = Tk()
 
-	window.mainloop()
+	b = Button(master, text="Vasta", width=25, command=callback(master, kysimused))
+	b.pack()
+
+	mainloop()
 
 
 if __name__ == "__main__":
-	main("asd")
+	main()
