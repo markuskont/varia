@@ -2,9 +2,14 @@
 
 import sys, os, argparse
 
-#parser = argparse.ArgumentParser()
-#parser.add_argument('--foo', help='foo help')
-#args = parser.parse_args()
+def parse_arguments():
+
+	parser = argparse.ArgumentParser()
+	parser.add_argument('-l', '--list', help='Text file that contains a list of data separated by newline.')
+	args = parser.parse_args()
+
+	return args
+	
 
 def openfile(argv):
 
@@ -33,7 +38,10 @@ def do_stuff():
 
 def main():
 
-	do_stuff()
+	args = parse_arguments()
+
+	print args.list
+
 
 if __name__ == "__main__":
 
