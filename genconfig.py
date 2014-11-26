@@ -11,30 +11,18 @@ def parse_arguments():
 
 	return args
 
+def check_file(*args):
+
+	for arg in args:
+		if not os.path.isfile(arg):
+			sys.exit('Argument not system file.')
+
 def openfile(argv):
 
 	with open(argv, 'r') as file:
 		lines = [line.rstrip('\n') for line in file]
 
 	return lines 
-
-def genconfig(argv):
-	print argv
-
-def do_stuff():
-
-	if sys.argv[1:]:
-
-		filename = sys.argv[1]
-
-		if os.path.isfile(filename):
-			lines = openfile(filename)
-			print lines
-		else:
-			print("%s does not exist or is not a file" % filename)
-
-	else:
-		print "Usage: genconfig.py <filename>"
 
 def main():
 
@@ -44,10 +32,12 @@ def main():
 
 	if not listfile: 
 		sys.exit('List file not provided')
-	elif not template:
+	elif not templatefile:
 		sys.exit('Temlate file not provided')
 	else:
 		print args
+
+	check_file(listfile, templatefile)
 
 if __name__ == "__main__":
 
