@@ -24,6 +24,12 @@ def openfile(argv):
 
 	return lines 
 
+def print_config(vhosts, template_lines):
+
+	for vhost in vhosts:
+		for line in template_lines:
+			print line
+
 def main():
 
 	args = parse_arguments()
@@ -34,11 +40,13 @@ def main():
 		sys.exit('List file not provided')
 	elif not templatefile:
 		sys.exit('Temlate file not provided')
+	elif os.path.isfile(listfile) and os.path.isfile(templatefile):
+		vhosts = openfile(listfile)
+		template_lines = openfile(templatefile)
+		print_config(vhosts, template_lines)
 	else:
-		print args
-
-	check_file(listfile, templatefile)
-
+		sys.exit('Unhandled problem')
+		
 if __name__ == "__main__":
 
 	main()
