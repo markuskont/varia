@@ -6,10 +6,10 @@ def parse_arguments():
 
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-l', '--list', help='Text file that contains a list of data separated by newline.')
+	parser.add_argument('-t', '--template', help='Configuration file template.')
 	args = parser.parse_args()
 
 	return args
-	
 
 def openfile(argv):
 
@@ -39,9 +39,15 @@ def do_stuff():
 def main():
 
 	args = parse_arguments()
+	listfile = args.list
+	templatefile = args.template
 
-	print args.list
-
+	if not listfile: 
+		sys.exit('List file not provided')
+	elif not template:
+		sys.exit('Temlate file not provided')
+	else:
+		print args
 
 if __name__ == "__main__":
 
