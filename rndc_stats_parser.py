@@ -10,10 +10,23 @@ def parse_arguments():
 
         return args
 
+def openfile(argv):
+
+        with open(argv, 'r') as file:
+                lines = [line.rstrip('\n') for line in file]
+
+        return lines
+
 def main():
 
 	args = parse_arguments()
-        statsfile = args.stats
+        statistics = openfile(args.stats)
+
+	for line in statistics:
+		if re.match("\+\+\+ Statistics Dump \+\+\+", line):
+			print line
+		if re.match("\+\+.+\+\+", line):
+			print line
 
 
 if __name__ == "__main__":
