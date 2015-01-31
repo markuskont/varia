@@ -17,16 +17,34 @@ def openfile(argv):
 
         return lines
 
+
+def get_dump_ranges(argv):
+	
+	for index, value in enumerate(argv):
+		if re.match("\+\+\+ Statistics Dump \+\+\+", value):
+			print index, value
+
+def traverse_range(start,end,array):
+
+	for i in range(start,end):
+		print array[i]
+
 def main():
 
 	args = parse_arguments()
         statistics = openfile(args.stats)
 
-	for line in statistics:
-		if re.match("\+\+\+ Statistics Dump \+\+\+", line):
-			print line
-		if re.match("\+\+.+\+\+", line):
-			print line
+	print statistics[-1]
+
+#	for line in reversed(statistics):
+#
+#		if re.match("\+\+\+ Statistics Dump \+\+\+", line):
+#			break
+
+#	for line in statistics:
+#
+#		if re.match("\+\+\+ Statistics Dump \+\+\+", line):
+#			print statistics.index(line)
 
 
 if __name__ == "__main__":
