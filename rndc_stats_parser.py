@@ -18,14 +18,6 @@ def openfile(argv):
 
         return lines
 
-class Statistics():
-
-	def __init__(self):
-		self.sections = []
-		
-	def __str__(self):
-		return "Statistics %s" % map(str, self.sections)
-
 class View():
 	def __init__(self, init_counters):
 		self.counters = {}
@@ -34,6 +26,23 @@ class View():
 		
 	def __str__(self):
 		return "View %s" % str(self.counters)
+
+class Subsection():
+	def __init__(self, init_counters):
+		self.counters = {}
+		if init_counters:
+			self.counters = init_counters
+		
+	def __str__(self):
+		return "Subsection %s" % str(self.counters)
+
+class Statistics():
+
+	def __init__(self):
+		self.sections = []
+		
+	def __str__(self):
+		return "Statistics %s" % map(str, self.sections)
 	
 
 def main():
@@ -42,11 +51,12 @@ def main():
         statistics = openfile(args.stats)
 
 	stats = Statistics()
-	counters = {}
+	views = {}
 	sections = {}
+	counters = {}
 
 	record_regex=re.compile("^\s+(\d+) (.+)")
-	subsection_regex=re.compile("\+\+ .+ \+\+")
+	subsection_regex=re.compile("\+\+ (.+) \+\+")
 	view_regex=re.compile("\[View: (.+)\]")
 	dump_regex=re.compile("\+\+\+ Statistics Dump \+\+\+")
 
@@ -65,13 +75,13 @@ def main():
 
 		elif view_regex.match(line):
 			stats.sections.append(View(counters))
+			counters = {}
 
 		elif dump_regex.match(line):
 			break
 		else:
 			pass
 
-#	print(views)
 	print(stats)
 
 if __name__ == "__main__":
