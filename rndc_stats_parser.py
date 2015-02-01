@@ -71,7 +71,9 @@ def main():
 			counters[m.group(2)] = m.group(1)
 
 		elif subsection_regex.match(line):
-			pass
+			m = subsection_regex.match(line)
+			stats.sections.append(Subsection(counters))
+			counters = {}
 
 		elif view_regex.match(line):
 			stats.sections.append(View(counters))
