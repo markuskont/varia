@@ -45,25 +45,31 @@ def main():
 	counters = {}
 	sections = {}
 
+	record_regex=re.compile("^\s+(\d+) (.+)")
+	subsection_regex=re.compile("\+\+ .+ \+\+")
+	view_regex=re.compile("\[View: (.+)\]")
+	dump_regex=re.compile("\+\+\+ Statistics Dump \+\+\+")
+
 	# Hetkel kalane loogika
 	# Nii peaks olema
 	# view -> section -> statistics
 
 	for line in reversed(statistics):
 
-		if re.match("^\s+(\d+) (.+)", line):
-			m = re.match("^\s+(\d+) (.+)", line)
+		if record_regex.match(line):
+			m = record_regex.match(line)
 			counters[m.group(2)] = m.group(1)
 
-		if re.match("\[View: (.+)\]", line):
-
-			stats.sections.append(View(counters))
-
-		if re.match("\+\+ .+ \+\+", line):
+		elif subsection_regex.match(line):
 			pass
 
-		if re.match("\+\+\+ Statistics Dump \+\+\+", line):
+		elif view_regex.match(line):
+			stats.sections.append(View(counters))
+
+		elif dump_regex.match(line):
 			break
+		else:
+			pass
 
 #	print(views)
 	print(stats)
