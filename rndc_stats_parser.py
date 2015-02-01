@@ -27,8 +27,10 @@ class Statistics():
 		return "Statistics %s" % map(str, self.sections)
 
 class View():
-	def __init__(self):
+	def __init__(self, init_counters):
 		self.counters = {}
+		if init_counters:
+			self.counters = init_counters
 		
 	def __str__(self):
 		return "View %s" % str(self.counters)
@@ -50,11 +52,7 @@ def main():
 
 		if re.match("\[View: .+\]", line):
 
-			views = View()
-			#views.counters[line] = line
-			views.counters = counters
-
-			stats.sections.append(views)
+			stats.sections.append(View(counters))
 
 			#reset temp counters
 			counters = {}
@@ -67,7 +65,7 @@ def main():
 			print line
 			break
 
-	print(views)
+#	print(views)
 	print(stats)
 
 if __name__ == "__main__":
