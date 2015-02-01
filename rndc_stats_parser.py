@@ -43,6 +43,11 @@ def main():
 
 	stats = Statistics()
 	counters = {}
+	sections = {}
+
+	# Hetkel kalane loogika
+	# Nii peaks olema
+	# view -> section -> statistics
 
 	for line in reversed(statistics):
 
@@ -54,15 +59,9 @@ def main():
 
 			stats.sections.append(View(counters))
 
-			#reset temp counters
-			#counters = {}
-
-			#print line
-
 		if re.match("\+\+ .+ \+\+", line):
-			print line
+
 		if re.match("\+\+\+ Statistics Dump \+\+\+", line):
-			print line
 			break
 
 #	print(views)
