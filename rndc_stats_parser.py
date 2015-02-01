@@ -57,7 +57,7 @@ def main():
 
 	record_regex=re.compile("^\s+(\d+) (.+)")
 	subsection_regex=re.compile("\+\+ (.+) \+\+")
-	view_regex=re.compile("\[View: (.+)\]")
+	view_regex=re.compile("(?:\[View: (.+)\])")
 	dump_regex=re.compile("\+\+\+ Statistics Dump \+\+\+")
 
 	# Hetkel kalane loogika
@@ -71,13 +71,15 @@ def main():
 			counters[m.group(2)] = m.group(1)
 
 		elif subsection_regex.match(line):
-			m = subsection_regex.match(line)
-			stats.sections.append(Subsection(counters))
-			counters = {}
+			if counters:
+				m = subsection_regex.match(line)
+				stats.sections.append(Subsection(counters))
+				counters = {}
 
 		elif view_regex.match(line):
-			stats.sections.append(View(counters))
-			counters = {}
+			if counters:
+				stats.sections.append(View(counters))
+				counters = {}
 
 		elif dump_regex.match(line):
 			break
