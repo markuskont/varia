@@ -60,6 +60,7 @@ def main():
 			stats.sections.append(View(counters))
 
 		if re.match("\+\+ .+ \+\+", line):
+			pass
 
 		if re.match("\+\+\+ Statistics Dump \+\+\+", line):
 			break
