@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import sys, os, argparse, re, json
+import sys, os, argparse, re, json, copy
 from pprint import pprint
 
 def parse_arguments():
@@ -46,18 +46,18 @@ def main():
 
 	for line in reversed(statistics):
 
-		if re.match("^\s+(\d+) (CNAME)", line):
-			m = re.match("^\s+(\d+) (CNAME)", line)
+		if re.match("^\s+(\d+) (.+)", line):
+			m = re.match("^\s+(\d+) (.+)", line)
 			counters[m.group(2)] = m.group(1)
 
-		if re.match("\[View: .+\]", line):
+		if re.match("\[View: (.+)\]", line):
 
 			stats.sections.append(View(counters))
 
 			#reset temp counters
-			counters = {}
+			#counters = {}
 
-			print line
+			#print line
 
 		if re.match("\+\+ .+ \+\+", line):
 			print line
