@@ -62,7 +62,7 @@ def parse_stats(raw, record_regex, view_regex, subsection_regex, dump_regex):
 		else:
 			pass
 
-	myprint(subsections)		
+	return subsections
 
 def main():
 
@@ -74,7 +74,8 @@ def main():
 	view_regex=re.compile("(?:\[View: (.+)\])")
 	dump_regex=re.compile("\+\+\+ Statistics Dump \+\+\+")
 
-	parse_stats(statistics, record_regex, view_regex, subsection_regex, dump_regex)
+	stats_dictionary = parse_stats(statistics, record_regex, view_regex, subsection_regex, dump_regex)
+	myprint(stats_dictionary)
 
 #	print views.items()
 #	print subsections.items()
