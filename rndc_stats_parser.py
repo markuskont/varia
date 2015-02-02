@@ -35,9 +35,10 @@ def parse_stats(raw, record_regex, view_regex, subsection_regex, dump_regex):
 			counters[m.group(2)] = m.group(1)
 
 		elif view_regex.match(line):
-			m = view_regex.match(line)
-			views[m.group(1)] = counters
-			counters = {}
+			if counters:
+				m = view_regex.match(line)
+				views[m.group(1)] = counters
+				counters = {}
 
 		elif subsection_regex.match(line):
 			if not counters and views:
@@ -57,13 +58,37 @@ def parse_stats(raw, record_regex, view_regex, subsection_regex, dump_regex):
 	return subsections
 
 
-def store_dictionary(d):
+def store_persistent_dictionary(path,d):
 
-	s = shelve.open('/tmp/test.db')
+	s = shelve.open(path)
 	try:
 		s['key1'] = d
 	finally:
 		s.close()
+
+def load_persistent_dictionary(path):
+
+	s = shelve.open(path)
+	try:
+		existing = s['key1']
+	finally:
+		s.close()
+		return existing
+
+def dictionary_diff(dict_new,dict_old):
+
+	dict_diff = {}
+
+	for k, v_new in dict_new.items():
+		if isinstance(v_new, dict):
+			dict_diff = dictionary_diff(v_new, dict_old.get(k, 0))
+		else:
+			v_new = int(v_new)
+			v_old = int(dict_old.get(k, 0))
+			dict_diff[k] = v_new - v_old
+			return dict_diff
+
+	return dict_diff
 
 def myprint(d):
 	for k, v in d.iteritems():
@@ -76,21 +101,25 @@ def myprint(d):
 def main():
 
 	args = parse_arguments()
-        statistics = openfile(args.stats)
+        raw_data = openfile(args.stats)
 
 	record_regex=re.compile("^\s+(\d+) (.+)")
 	subsection_regex=re.compile("\+\+ (.+) \+\+")
 	view_regex=re.compile("(?:\[View: (.+)\])")
 	dump_regex=re.compile("\+\+\+ Statistics Dump \+\+\+")
 
-	stats_dictionary = parse_stats(statistics, record_regex, view_regex, subsection_regex, dump_regex)
+	persist_database_path = '/tmp/test.db'
 
-	store_dictionary(stats_dictionary)
+	parsed_stats_old = load_persistent_dictionary(persist_database_path)
+	parsed_stats_new = parse_stats(raw_data, record_regex, view_regex, subsection_regex, dump_regex)
 
-	myprint(stats_dictionary)
+	store_persistent_dictionary(persist_database_path,parsed_stats_new)
 
-#	print views.items()
-#	print subsections.items()
+	diff = dictionary_diff(parsed_stats_new, parsed_stats_old)
+
+	myprint(parsed_stats_new)
+
+	#myprint(parsed_stats_new)
 
 if __name__ == "__main__":
 
