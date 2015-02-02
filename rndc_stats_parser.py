@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import sys, os, argparse, re, json, copy
+import sys, os, argparse, re, json, copy, shelve
 from pprint import pprint
 
 def parse_arguments():
@@ -18,14 +18,6 @@ def openfile(argv):
 
         return lines
 
-def myprint(d):
-	for k, v in d.iteritems():
-		if isinstance(v, dict):
-			print "{0}".format(k)
-			myprint(v)
-		else:
-			print "{0} : {1}".format(k, v)
-
 def parse_stats(raw, record_regex, view_regex, subsection_regex, dump_regex):
 
 	counters = {}
@@ -36,7 +28,7 @@ def parse_stats(raw, record_regex, view_regex, subsection_regex, dump_regex):
 	# Nii peaks olema
 	# view -> section -> statistics
 
-	for line in reversed(statistics):
+	for line in reversed(raw):
 
 		if record_regex.match(line):
 			m = record_regex.match(line)
@@ -64,6 +56,23 @@ def parse_stats(raw, record_regex, view_regex, subsection_regex, dump_regex):
 
 	return subsections
 
+
+def store_dictionary(d):
+
+	s = shelve.open('/tmp/test.db')
+	try:
+		s['key1'] = d
+	finally:
+		s.close()
+
+def myprint(d):
+	for k, v in d.iteritems():
+		if isinstance(v, dict):
+			print "{0}".format(k)
+			myprint(v)
+		else:
+			print "{0} : {1}".format(k, v)
+
 def main():
 
 	args = parse_arguments()
@@ -75,6 +84,9 @@ def main():
 	dump_regex=re.compile("\+\+\+ Statistics Dump \+\+\+")
 
 	stats_dictionary = parse_stats(statistics, record_regex, view_regex, subsection_regex, dump_regex)
+
+	store_dictionary(stats_dictionary)
+
 	myprint(stats_dictionary)
 
 #	print views.items()
