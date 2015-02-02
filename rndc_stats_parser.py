@@ -79,16 +79,17 @@ def dictionary_diff(dict_new,dict_old):
 
 	dict_diff = {}
 
+	# Vigane loogika
 	for k, v_new in dict_new.items():
 		if isinstance(v_new, dict):
 			dict_diff = dictionary_diff(v_new, dict_old.get(k, 0))
+			return dict_diff
 		else:
 			v_new = int(v_new)
 			v_old = int(dict_old.get(k, 0))
 			dict_diff[k] = v_new - v_old
 			return dict_diff
 
-	return dict_diff
 
 def myprint(d):
 	for k, v in d.iteritems():
@@ -116,6 +117,8 @@ def main():
 	store_persistent_dictionary(persist_database_path,parsed_stats_new)
 
 	diff = dictionary_diff(parsed_stats_new, parsed_stats_old)
+	
+	store_persistent_dictionary('/tmp/diff.db', diff)
 
 	myprint(parsed_stats_new)
 
