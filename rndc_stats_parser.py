@@ -18,47 +18,27 @@ def openfile(argv):
 
         return lines
 
-class View():
-	def __init__(self, init_counters):
-		self.counters = {}
-		if init_counters:
-			self.counters = init_counters
-		
-	def __str__(self):
-		return "View %s" % str(self.counters)
-
-class Subsection():
-	def __init__(self, init_counters):
-		self.counters = {}
-		if init_counters:
-			self.counters = init_counters
-		
-	def __str__(self):
-		return "Subsection %s" % str(self.counters)
-
-class Statistics():
-
-	def __init__(self):
-		self.sections = []
-		
-	def __str__(self):
-		return "Statistics %s" % map(str, self.sections)
-	
+def myprint(d):
+	for k, v in d.iteritems():
+		if isinstance(v, dict):
+			print "{0}".format(k)
+			myprint(v)
+		else:
+			print "{0} : {1}".format(k, v)
 
 def main():
 
 	args = parse_arguments()
         statistics = openfile(args.stats)
 
-	stats = Statistics()
-	views = {}
-	sections = {}
-	counters = {}
-
 	record_regex=re.compile("^\s+(\d+) (.+)")
 	subsection_regex=re.compile("\+\+ (.+) \+\+")
 	view_regex=re.compile("(?:\[View: (.+)\])")
 	dump_regex=re.compile("\+\+\+ Statistics Dump \+\+\+")
+
+	counters = {}
+	subsections = {}
+	views = {}
 
 	# Hetkel kalane loogika
 	# Nii peaks olema
@@ -70,15 +50,19 @@ def main():
 			m = record_regex.match(line)
 			counters[m.group(2)] = m.group(1)
 
-		elif subsection_regex.match(line):
-			if counters:
-				m = subsection_regex.match(line)
-				stats.sections.append(Subsection(counters))
-				counters = {}
-
 		elif view_regex.match(line):
-			if counters:
-				stats.sections.append(View(counters))
+			m = view_regex.match(line)
+			views[m.group(1)] = counters
+			counters = {}
+
+		elif subsection_regex.match(line):
+			if not counters and views:
+				m = subsection_regex.match(line)
+				subsections[m.group(1)] = views
+				views = {}
+			elif counters and not views:
+				m = subsection_regex.match(line)
+				subsections[m.group(1)] = counters
 				counters = {}
 
 		elif dump_regex.match(line):
@@ -86,7 +70,10 @@ def main():
 		else:
 			pass
 
-	print(stats)
+	myprint(subsections)		
+
+#	print views.items()
+#	print subsections.items()
 
 if __name__ == "__main__":
 
