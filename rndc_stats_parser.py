@@ -26,15 +26,7 @@ def myprint(d):
 		else:
 			print "{0} : {1}".format(k, v)
 
-def main():
-
-	args = parse_arguments()
-        statistics = openfile(args.stats)
-
-	record_regex=re.compile("^\s+(\d+) (.+)")
-	subsection_regex=re.compile("\+\+ (.+) \+\+")
-	view_regex=re.compile("(?:\[View: (.+)\])")
-	dump_regex=re.compile("\+\+\+ Statistics Dump \+\+\+")
+def parse_stats(raw, record_regex, view_regex, subsection_regex, dump_regex):
 
 	counters = {}
 	subsections = {}
@@ -71,6 +63,18 @@ def main():
 			pass
 
 	myprint(subsections)		
+
+def main():
+
+	args = parse_arguments()
+        statistics = openfile(args.stats)
+
+	record_regex=re.compile("^\s+(\d+) (.+)")
+	subsection_regex=re.compile("\+\+ (.+) \+\+")
+	view_regex=re.compile("(?:\[View: (.+)\])")
+	dump_regex=re.compile("\+\+\+ Statistics Dump \+\+\+")
+
+	parse_stats(statistics, record_regex, view_regex, subsection_regex, dump_regex)
 
 #	print views.items()
 #	print subsections.items()
