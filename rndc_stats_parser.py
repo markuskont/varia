@@ -34,7 +34,7 @@ def invoke_rndc_stats(stats_file_path, remfile):
 		print >>sys.stderr, error_message, e
 
 	# let file remove be optional
-	if remfile = True:
+	if remfile == True:
 		try:
 			os.remove(stats_file_path)
 		except OSError as e:
@@ -139,8 +139,12 @@ def main():
 	#args = parse_arguments()
 	stats_file_path = '/var/cache/bind/named.stats'
 	persist_database_path = '/tmp/test.db'
+
+	# Works, but off for debugging
+	# Enable in prod
+	remove_stats_file_after_invoke = False
 	
-        raw_data = invoke_rndc_stats(stats_file_path, False)
+        raw_data = invoke_rndc_stats(stats_file_path, remove_stats_file_after_invoke)
 
 	record_regex=re.compile("^\s+(\d+) (.+)")
 	subsection_regex=re.compile("\+\+ (.+) \+\+")
