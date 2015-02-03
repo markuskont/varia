@@ -152,18 +152,20 @@ def main():
 	dump_regex=re.compile("\+\+\+ Statistics Dump \+\+\+")
 
 
+	# Catch errors here
+	# File may not exist
+	# No stored hashmap might be present
 	parsed_stats_old = load_persistent_dictionary(persist_database_path)
 	parsed_stats_new = parse_stats(raw_data, record_regex, view_regex, subsection_regex, dump_regex)
 
+	# Store new data in dict
 	store_persistent_dictionary(persist_database_path,parsed_stats_new)
 
 	diff = dictionary_diff(parsed_stats_new, parsed_stats_old)
 	
-	# first argument should be persist_database_path
-	# fix after testing other changes
+	#######################################################
+	# Debug section
 	store_persistent_dictionary('/tmp/diff.db', diff)
-
-	myprint(parsed_stats_new)
 
 	#myprint(parsed_stats_new)
 
