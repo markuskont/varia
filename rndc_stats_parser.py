@@ -134,7 +134,7 @@ def myprint(d):
 
 def main():
 
-	# I will semi-hardcode my paths, because cpde is going to remote them
+	# I will semi-hardcode my paths, because code is going to remove them
 	# I do not want to rm arbitrary file, because I messed up an argument
 	#args = parse_arguments()
 	stats_file_path = '/var/cache/bind/named.stats'
