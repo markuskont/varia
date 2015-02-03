@@ -110,18 +110,20 @@ def load_persistent_dictionary(path):
 
 def dictionary_diff(dict_new,dict_old):
 
-	dict_diff = {}
-
-	# Vigane loogika
 	for k, v_new in dict_new.items():
 		if isinstance(v_new, dict):
-			dict_diff = dictionary_diff(v_new, dict_old.get(k, 0))
-			return dict_diff
+			print "{0}".format(k)
+			dictionary_diff(v_new, dict_old.get(k, 0))
 		else:
 			v_new = int(v_new)
 			v_old = int(dict_old.get(k, 0))
-			dict_diff[k] = v_new - v_old
-			return dict_diff
+			dict_diff = v_new - v_old
+
+			# if counters have reset since last poll, it is safe to use last data
+			if dict_diff < 0:
+				dict_diff = v_new
+
+			print "{0} : {1}".format(k, str(dict_diff))
 
 
 def myprint(d):
@@ -167,7 +169,7 @@ def main():
 	# Debug section
 	store_persistent_dictionary('/tmp/diff.db', diff)
 
-	#myprint(parsed_stats_new)
+	# myprint(parsed_stats_new)
 
 if __name__ == "__main__":
 
