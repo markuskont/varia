@@ -56,6 +56,7 @@ def parse_stats(raw, record_regex, view_regex, subsection_regex, dump_regex):
 	counters = {}
 	subsections = {}
 	views = {}
+	dump_mapped = {}
 
 	# Hetkel kalane loogika
 	# Nii peaks olema
@@ -84,6 +85,8 @@ def parse_stats(raw, record_regex, view_regex, subsection_regex, dump_regex):
 				counters = {}
 
 		elif dump_regex.match(line):
+			unix_epoch = dump_regex.match(line).group(1)
+			dump_mapped[unix_epoch] = subsections
 			break
 		else:
 			pass
@@ -125,6 +128,8 @@ def dictionary_diff(dict_new,dict_old):
 
 			print "{0} : {1}".format(k, str(dict_diff))
 
+def calculate_queries_per_second(new_value,old_value,period):
+	pass
 
 def myprint(d):
 	for k, v in d.iteritems():
@@ -151,23 +156,26 @@ def main():
 	record_regex=re.compile("^\s+(\d+) (.+)")
 	subsection_regex=re.compile("\+\+ (.+) \+\+")
 	view_regex=re.compile("(?:\[View: (.+)\])")
-	dump_regex=re.compile("\+\+\+ Statistics Dump \+\+\+")
+	dump_regex=re.compile("\+\+\+ Statistics Dump \+\+\+ \((\d+)\)")
 
-
-	# Catch errors here
-	# File may not exist
-	# No stored hashmap might be present
-	parsed_stats_old = load_persistent_dictionary(persist_database_path)
 	parsed_stats_new = parse_stats(raw_data, record_regex, view_regex, subsection_regex, dump_regex)
+
+	# If database file is present in system
+	# Load old database and diff old and new
+	if os.path.isfile(persist_database_path):
+		parsed_stats_old = load_persistent_dictionary(persist_database_path)
+	else:
+		parsed_stats_old = parsed_stats_new
+
+	dictionary_diff(parsed_stats_new, parsed_stats_old)
 
 	# Store new data in dict
 	store_persistent_dictionary(persist_database_path,parsed_stats_new)
 
-	diff = dictionary_diff(parsed_stats_new, parsed_stats_old)
 	
 	#######################################################
 	# Debug section
-	store_persistent_dictionary('/tmp/diff.db', diff)
+	# store_persistent_dictionary('/tmp/diff.db', diff)
 
 	# myprint(parsed_stats_new)
 
