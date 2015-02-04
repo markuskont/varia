@@ -86,12 +86,12 @@ def parse_stats(raw, record_regex, view_regex, subsection_regex, dump_regex):
 
 		elif dump_regex.match(line):
 			unix_epoch = dump_regex.match(line).group(1)
-			dump_mapped[unix_epoch] = subsections
+			dump_mapped[str(unix_epoch)] = subsections
 			break
 		else:
 			pass
 
-	return subsections
+	return dump_mapped
 
 
 def store_persistent_dictionary(path,d):
@@ -118,18 +118,23 @@ def dictionary_diff(dict_new,dict_old):
 			print "{0}".format(k)
 			dictionary_diff(v_new, dict_old.get(k, 0))
 		else:
-			v_new = int(v_new)
-			v_old = int(dict_old.get(k, 0))
-			dict_diff = v_new - v_old
+			diff = calculate_queries_per_second(v_new, int(dict_old.get(k, 0)), False)
 
-			# if counters have reset since last poll, it is safe to use last data
-			if dict_diff < 0:
-				dict_diff = v_new
-
-			print "{0} : {1}".format(k, str(dict_diff))
+			print "{0} : {1}".format(k, str(diff))
 
 def calculate_queries_per_second(new_value,old_value,period):
-	pass
+
+	diff = int(new_value) - int(old_value)
+
+	if diff > 0:
+		# subtract period value here
+		pass
+	elif diff < 0:
+		diff = new_value
+	else:
+		pass
+
+	return diff
 
 def myprint(d):
 	for k, v in d.iteritems():
