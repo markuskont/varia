@@ -91,22 +91,22 @@ def parse_stats(raw, record_regex, view_regex, subsection_regex, dump_regex):
 		else:
 			pass
 
-	return dump_mapped
+	return subsections
 
 
-def store_persistent_dictionary(path,d):
+def store_persistent_dictionary(path,d,key):
 
 	s = shelve.open(path)
 	try:
-		s['key1'] = d
+		s[key] = d
 	finally:
 		s.close()
 
-def load_persistent_dictionary(path):
+def load_persistent_dictionary(path,key):
 
 	s = shelve.open(path)
 	try:
-		existing = s['key1']
+		existing = s[key]
 	finally:
 		s.close()
 		return existing
@@ -168,14 +168,14 @@ def main():
 	# If database file is present in system
 	# Load old database and diff old and new
 	if os.path.isfile(persist_database_path):
-		parsed_stats_old = load_persistent_dictionary(persist_database_path)
+		parsed_stats_old = load_persistent_dictionary(persist_database_path,'key1')
 	else:
 		parsed_stats_old = parsed_stats_new
 
 	dictionary_diff(parsed_stats_new, parsed_stats_old)
 
 	# Store new data in dict
-	store_persistent_dictionary(persist_database_path,parsed_stats_new)
+	store_persistent_dictionary(persist_database_path,parsed_stats_new,'key1')
 
 	
 	#######################################################
