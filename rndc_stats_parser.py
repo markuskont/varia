@@ -122,7 +122,7 @@ def dictionary_diff(dict_new,dict_old):
 
 def calculate_queries_per_second(new_value,old_value,period):
 
-	diff = int(new_value) - int(old_value)
+	diff = subtract(new_value,old_value)
 
 	if diff > 0:
 		# subtract period value here
@@ -131,6 +131,12 @@ def calculate_queries_per_second(new_value,old_value,period):
 		diff = new_value
 	else:
 		pass
+
+	return diff
+
+def subtract(new_value,old_value):
+	
+	diff = int(new_value) - int(old_value)
 
 	return diff
 
@@ -144,7 +150,7 @@ def myprint(d):
 
 def main():
 
-	# I will semi-hardcode my paths, because code is going to remove them
+	# I will semi-hardcode my paths, because code is going to remove system file
 	# I do not want to rm arbitrary file, because I messed up an argument
 	#args = parse_arguments()
 	stats_file_path = '/var/cache/bind/named.stats'
