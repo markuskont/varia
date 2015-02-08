@@ -85,8 +85,6 @@ def parse_stats(raw, record_regex, view_regex, subsection_regex, dump_regex):
 				counters = {}
 
 		elif dump_regex.match(line):
-			unix_epoch = dump_regex.match(line).group(1)
-			dump_mapped[str(unix_epoch)] = subsections
 			break
 		else:
 			pass
