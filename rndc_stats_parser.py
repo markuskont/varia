@@ -91,6 +91,15 @@ def parse_stats(raw, record_regex, view_regex, subsection_regex, dump_regex):
 
 	return subsections
 
+def get_timestamp(raw, pattern):
+
+	for line in reversed(raw):
+		if pattern.match(line):
+			
+			timestamp = pattern.match(line).group(1)
+			break
+
+	return timestamp
 
 def store_persistent_dictionary(path,d,key):
 
@@ -150,6 +159,10 @@ def myprint(d):
 
 def main():
 
+	#########################
+	# Variables
+	#########################
+	
 	# I will semi-hardcode my paths, because code is going to remove system file
 	# I do not want to rm arbitrary file, because I messed up an argument
 	#args = parse_arguments()
@@ -159,33 +172,53 @@ def main():
 	# Works, but off for debugging
 	# Enable in prod
 	remove_stats_file_after_invoke = False
-	
-        raw_data = invoke_rndc_stats(stats_file_path, remove_stats_file_after_invoke)
 
 	record_regex=re.compile("^\s+(\d+) (.+)")
 	subsection_regex=re.compile("\+\+ (.+) \+\+")
 	view_regex=re.compile("(?:\[View: (.+)\])")
 	dump_regex=re.compile("\+\+\+ Statistics Dump \+\+\+ \((\d+)\)")
 
+	########################
+	# Process data
+	########################
+
+        raw_data = invoke_rndc_stats(stats_file_path, remove_stats_file_after_invoke)
+
+	# Currently easier to get separately than attempt to return with parse_stats
+	# Timestamp does not play well establised dict structure, and returning multiple distinct values is complicated
+	# Refactor later
+	timestamp_new = get_timestamp(raw_data, dump_regex)
+
 	parsed_stats_new = parse_stats(raw_data, record_regex, view_regex, subsection_regex, dump_regex)
 
 	# If database file is present in system
-	# Load old database and diff old and new
+	# Load old database
 	if os.path.isfile(persist_database_path):
-		parsed_stats_old = load_persistent_dictionary(persist_database_path,'key1')
+		parsed_stats_old = load_persistent_dictionary(persist_database_path,'statistics')
+		timestamp_old = load_persistent_dictionary(persist_database_path, 'timestamp')
 	else:
 		parsed_stats_old = parsed_stats_new
+		timestamp_old = timestamp_new
+
+	timestamp_diff = subtract(timestamp_new, timestamp_old)
+
+	# Store new data in dict
+	store_persistent_dictionary(persist_database_path,parsed_stats_new,'statistics')
+	store_persistent_dictionary(persist_database_path,timestamp_new,'timestamp')
+
+	#############################
+	# Handle data return to user
+	#############################
 
 	dictionary_diff(parsed_stats_new, parsed_stats_old)
 
-	# Store new data in dict
-	store_persistent_dictionary(persist_database_path,parsed_stats_new,'key1')
-
-	
 	#######################################################
 	# Debug section
-	# store_persistent_dictionary('/tmp/diff.db', diff)
+	#######################################################
 
+	# store_persistent_dictionary('/tmp/diff.db', diff)
+	# print timestamp_new
+	# print timestamp_diff
 	# myprint(parsed_stats_new)
 
 if __name__ == "__main__":
