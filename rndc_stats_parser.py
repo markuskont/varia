@@ -118,14 +118,14 @@ def load_persistent_dictionary(path,key):
 		s.close()
 		return existing
 
-def dictionary_diff(dict_new,dict_old):
+def dictionary_diff(dict_new,dict_old,time_period_in_seconds):
 
 	for k, v_new in dict_new.items():
 		if isinstance(v_new, dict):
 			print "{0}".format(k)
-			dictionary_diff(v_new, dict_old.get(k, 0))
+			dictionary_diff(v_new, dict_old.get(k, 0),time_period_in_seconds)
 		else:
-			diff = calculate_queries_per_second(v_new, int(dict_old.get(k, 0)), False)
+			diff = int(calculate_queries_per_second(v_new, int(dict_old.get(k, 0)), False)) / int(time_period_in_seconds)
 
 			print "{0} : {1}".format(k, str(diff))
 
@@ -210,7 +210,7 @@ def main():
 	# Handle data return to user
 	#############################
 
-	dictionary_diff(parsed_stats_new, parsed_stats_old)
+	dictionary_diff(parsed_stats_new, parsed_stats_old, timestamp_diff)
 
 	#######################################################
 	# Debug section
