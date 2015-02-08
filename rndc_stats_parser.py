@@ -122,7 +122,7 @@ def dictionary_diff(dict_new,dict_old,timestamp_new,timestamp_old):
 
 	for k, v_new in dict_new.items():
 		if isinstance(v_new, dict):
-			print "{0}".format(k)
+			# print "{0}".format(k)
 			dictionary_diff(v_new, dict_old.get(k, 0),timestamp_new,timestamp_old)
 		else:
 			v_diff = subtract(v_new,dict_old.get(k,0))
@@ -131,9 +131,16 @@ def dictionary_diff(dict_new,dict_old,timestamp_new,timestamp_old):
 			if v_diff < 0:
 				v_diff = v_new
 
-			v_per_second = int(v_diff) / int(timestamp_diff)
+			v_per_second = int(v_diff) / float(timestamp_diff)
 
-			print "{0} : {1}".format(format_key(k), str(v_per_second))
+			print_stats(k,v_per_second)
+			#print "{0} : {1}".format(format_key(k), str(v_per_second))
+
+def print_stats(key,value):
+	value = format_key(key) + ':' + '"' + str(value) + '" '
+	print value, 
+
+	#print '{0}: "{1}" '.format(format_key(key), str(value))
 
 def format_key(key):
 
@@ -147,6 +154,7 @@ def subtract(new_value,old_value):
 
 	return diff
 
+# debug only
 def myprint(d):
 	for k, v in d.iteritems():
 		if isinstance(v, dict):
@@ -202,11 +210,9 @@ def main():
 	store_persistent_dictionary(persist_database_path,parsed_stats_new,'statistics')
 	store_persistent_dictionary(persist_database_path,timestamp_new,'timestamp')
 
-	#############################
-	# Handle data return to user
-	#############################
-
+	print "-------------------------------------------------"
 	dictionary_diff(parsed_stats_new, parsed_stats_old, timestamp_new, timestamp_old)
+
 
 	#######################################################
 	# Debug section
