@@ -118,30 +118,28 @@ def load_persistent_dictionary(path,key):
 		s.close()
 		return existing
 
-def dictionary_diff(dict_new,dict_old,time_period_in_seconds):
+def dictionary_diff(dict_new,dict_old,timestamp_new,timestamp_old):
 
 	for k, v_new in dict_new.items():
 		if isinstance(v_new, dict):
 			print "{0}".format(k)
-			dictionary_diff(v_new, dict_old.get(k, 0),time_period_in_seconds)
+			dictionary_diff(v_new, dict_old.get(k, 0),timestamp_new,timestamp_old)
 		else:
-			diff = int(calculate_queries_per_second(v_new, int(dict_old.get(k, 0)), False)) / int(time_period_in_seconds)
+			v_diff = subtract(v_new,dict_old.get(k,0))
+			timestamp_diff = subtract(timestamp_new,timestamp_old)
 
-			print "{0} : {1}".format(k, str(diff))
+			if v_diff < 0:
+				v_diff = v_new
 
-def calculate_queries_per_second(new_value,old_value,period):
+			v_per_second = int(v_diff) / int(timestamp_diff)
 
-	diff = subtract(new_value,old_value)
+			print "{0} : {1}".format(format_key(k), str(v_per_second))
 
-	if diff > 0:
-		# subtract period value here
-		pass
-	elif diff < 0:
-		diff = new_value
-	else:
-		pass
+def format_key(key):
 
-	return diff
+	pattern = re.compile('\s+')
+	stripped = re.sub(pattern,'_',key)
+	return stripped
 
 def subtract(new_value,old_value):
 	
@@ -200,8 +198,6 @@ def main():
 		parsed_stats_old = parsed_stats_new
 		timestamp_old = timestamp_new
 
-	timestamp_diff = subtract(timestamp_new, timestamp_old)
-
 	# Store new data in dict
 	store_persistent_dictionary(persist_database_path,parsed_stats_new,'statistics')
 	store_persistent_dictionary(persist_database_path,timestamp_new,'timestamp')
@@ -210,7 +206,7 @@ def main():
 	# Handle data return to user
 	#############################
 
-	dictionary_diff(parsed_stats_new, parsed_stats_old, timestamp_diff)
+	dictionary_diff(parsed_stats_new, parsed_stats_old, timestamp_new, timestamp_old)
 
 	#######################################################
 	# Debug section
