@@ -2,10 +2,18 @@
 
 import shelve
 
-s = shelve.open('/tmp/diff.db')
+s = shelve.open('/tmp/test.db')
 try:
-    existing = s['key1']
+    raw = s['key1']
 finally:
     s.close()
 
-print existing
+s = shelve.open('/tmp/diff.db')
+try:
+    diff = s['key1']
+finally:
+    s.close()
+
+print raw
+print "---------------------------------"
+print diff

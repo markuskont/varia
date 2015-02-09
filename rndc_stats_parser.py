@@ -18,6 +18,7 @@ def dictionary_key_substitute():
 	'queries with RTT < 10ms' : 'rtt__10',
 	'queries with RTT 10-100ms' : 'rtt_10_100',
 	'queries with RTT 100-500ms' : 'rtt_100_500',
+	'queries with RTT 500-800ms' : 'rtt_500_800',
 	'queries with RTT 800-1600ms' : 'rtt_800_1600',
 	'queries with RTT > 1600ms' : 'rtt_1600_',
 	'IPv6 queries sent' : 'ip6qsent',
