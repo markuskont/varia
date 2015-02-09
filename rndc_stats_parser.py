@@ -14,7 +14,7 @@ def parse_arguments():
 
 def invoke_rndc_stats(stats_file_path, remfile):
 
-	cmd='sudo rndc stats'
+	cmd='rndc stats'
 
 	try:
 		os.popen(cmd)
