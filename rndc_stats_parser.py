@@ -3,6 +3,73 @@
 import sys, os, argparse, re, json, copy, shelve
 from pprint import pprint
 
+
+def dictionary_key_substitute():
+
+	substitute = { 
+	# resolver stats
+	'IPv4 AXFR requested': 'ip4axfrreq',
+	'transfer requests failed': 'axfrfail', 
+	'IPv4 SOA queries sent' : 'ip4soaq',
+	'IPv4 responses received' : 'ip4resp',
+	'DNSSEC validation succeeded' : 'dnssecvalsuc',
+	'NXDOMAIN received' : 'nxdomain',
+	'other errors received' : 'otherr',
+	'queries with RTT < 10ms' : 'rtt__10',
+	'queries with RTT 10-100ms' : 'rtt_10_100',
+	'queries with RTT 100-500ms' : 'rtt_100_500',
+	'queries with RTT 800-1600ms' : 'rtt_800_1600',
+	'queries with RTT > 1600ms' : 'rtt_1600_',
+	'IPv6 queries sent' : 'ip6qsent',
+	'IPv4 queries sent' : 'ip4qsent',
+	'IPv4 NS address fetches' : 'ip4nsfetch',
+	'query retries' : 'qret',
+	'query timeouts' : 'qtimeout',
+	'IPv4 NS address fetch failed' : 'ip4nsfetchfail',
+	'DNSSEC validation attempted' : 'dnssecvalatt',
+	'lame delegations received' : 'lamedel',
+	'SERVFAIL received' : 'srvfail',
+	'DNSSEC NX validation succeeded' : 'dnssecnxvalsuc',
+	'IPv6 NS address fetch failed' : 'ip6nsfetchf',
+	'truncated responses received' : 'truncresp',
+	# Socket I/O
+	'UDP/IPv6 sockets closed' : 'u6soccl',
+	'TCP/IPv4 connections established' : 't4conest',
+	'UDP/IPv6 sockets opened' : 'u6socop',
+	'UDP/IPv6 socket connect failures' : 'u6socconf',
+	'UDP/IPv4 socket bind failures' : 'u4socbinf',
+	'UDP/IPv6 send errors' : 'u6serr',
+	'UDP/IPv4 sockets closed' : 'u4sockcl',
+	'UDP/IPv4 recv errors' : 'u4rerr',
+	'UDP/IPv4 connections established' : 'u4connest',
+	'TCP/IPv4 sockets closed' : 't4soccl',
+	'TCP/IPv4 socket connect failures' : 't4socconf',
+	'TCP/IPv4 sockets opened' : 't4socop',
+	'TCP/IPv4 connections accepted' : 't4conacc',
+	'UDP/IPv4 sockets opened' : 'u4socop',
+	# Name Server Statistics
+	'responses with EDNS\(0\) sent' : 'r_edns_s',
+	'requests with EDNS\(0\) received' : 'r_edns_r',
+	'duplicate queries received' : 'dupqrec',
+	'auth queries rejected' : 'authqrej',
+	'truncated responses sent' : 'trresps',
+	'queries resulted in non authoritative answer' : 'qresnaa',
+	'queries resulted in SERVFAIL' : 'qressf',
+	'queries resulted in NXDOMAIN' : 'qresnxdom',
+	'queries resulted in nxrrset' : 'qresnxrr',
+	'responses sent' : 'rests',
+	'other query failures' : 'o_qfail',
+	'queries resulted in referral answer' : 'qresrefan',
+	'recursive queries rejected' : 'recqrej',
+	'IPv4 requests received' : 'ip4reqrec',
+	'queries resulted in authoritative answer' : 'qresaa',
+	'TCP requests received' : 'treqrec',
+	'queries resulted in successful answer' : 'qressuca',
+	'queries caused recursion' : 'qcaurec'
+	 }
+
+	return substitute
+
 # Not used ATM
 def parse_arguments():
 
@@ -122,7 +189,7 @@ def dictionary_diff(dict_new,dict_old,timestamp_new,timestamp_old):
 
 	for k, v_new in dict_new.items():
 		if isinstance(v_new, dict):
-			print k
+			print format_key(k),
 			dictionary_diff(v_new, dict_old.get(k, 0),timestamp_new,timestamp_old)
 		else:
 			v_diff = subtract(v_new,dict_old.get(k,0))
@@ -145,9 +212,19 @@ def print_stats(key,value):
 
 def format_key(key):
 
-	pattern = re.compile('\s+')
-	stripped = re.sub(pattern,'_',key)
-	return stripped
+
+	# Default key names are too long for cacti to handle
+	# Create substitutions
+
+	key_string_patterns = dictionary_key_substitute()
+
+	for k, v in key_string_patterns.items():
+		if re.match(k, key):
+			key = v
+
+	#stripped = re.sub(pattern,'_',key)
+
+	return key
 
 def subtract(new_value,old_value):
 	
