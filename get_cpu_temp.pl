@@ -10,7 +10,7 @@ foreach my $line (@output)
 {
 	if($line =~ m/^(Core) (\d):\s+[+-]?(\d+)\.\d+\s*C/){
 
-		print "$1$2:$3"
+		print "$1:".$3;
 
 	}
 
