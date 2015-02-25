@@ -190,7 +190,7 @@ def dictionary_diff(dict_new,dict_old,timestamp_new,timestamp_old):
 
 	for k, v_new in dict_new.items():
 		if isinstance(v_new, dict):
-			print format_key(k),
+			#print format_key(k),
 			dictionary_diff(v_new, dict_old.get(k, 0),timestamp_new,timestamp_old)
 		else:
 			v_diff = subtract(v_new,dict_old.get(k,0))
@@ -199,7 +199,7 @@ def dictionary_diff(dict_new,dict_old,timestamp_new,timestamp_old):
 			if v_diff < 0:
 				v_diff = v_new
 
-			v_per_second = int(v_diff) / float(timestamp_diff)
+			v_per_second = int(v_diff) #/ float(timestamp_diff)
 
 			print_stats(k,v_per_second)
 			#print "{0} : {1}".format(format_key(k), str(v_per_second))
