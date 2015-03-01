@@ -252,7 +252,7 @@ def main():
 	# I do not want to rm arbitrary file, because I messed up an argument
 	#args = parse_arguments()
 	stats_file_path = '/var/cache/bind/named.stats'
-	persist_database_path = '/tmp/test.db'
+	persist_database_path = '/tmp/rndc_stats.db'
 
 	# Works, but off for debugging
 	# Enable in prod
