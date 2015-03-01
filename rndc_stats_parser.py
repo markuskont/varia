@@ -55,6 +55,7 @@ def dictionary_key_substitute():
 	# Name Server Statistics
 	'responses with EDNS\(0\) sent' : 'r_edns_s',
 	'requests with EDNS\(0\) received' : 'r_edns_r',
+	'EDNS\(0\) query failures' : 'edns_q_fail',
 	'duplicate queries received' : 'dupqrec',
 	'auth queries rejected' : 'authqrej',
 	'truncated responses sent' : 'trresps',
