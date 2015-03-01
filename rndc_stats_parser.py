@@ -3,88 +3,36 @@
 import sys, os, argparse, re, json, copy, shelve
 from pprint import pprint
 
+def rndc_rtt():
 
-def dictionary_key_substitute():
-
-	substitute = { 
+	data = { 
 	# resolver stats
-	'IPv4 AXFR requested': 'ip4axfrreq',
-	'transfer requests failed': 'axfrfail', 
-	'IPv4 SOA queries sent' : 'ip4soaq',
-	'IPv4 responses received' : 'ip4resp',
-	'DNSSEC validation succeeded' : 'dnssecvalsuc',
-	'NXDOMAIN received' : 'nxdomain',
-	'other errors received' : 'otherr',
 	'queries with RTT < 10ms' : 'rtt__10',
 	'queries with RTT 10-100ms' : 'rtt_10_100',
 	'queries with RTT 100-500ms' : 'rtt_100_500',
 	'queries with RTT 500-800ms' : 'rtt_500_800',
 	'queries with RTT 800-1600ms' : 'rtt_800_1600',
-	'queries with RTT > 1600ms' : 'rtt_1600_',
-	'IPv6 queries sent' : 'ip6qsent',
-	'IPv4 queries sent' : 'ip4qsent',
-	'IPv4 NS address fetches' : 'ip4nsfetch',
-	'IPv6 NS address fetches' : 'ip6nsfetch',
-	'query retries' : 'qret',
-	'query timeouts' : 'qtimeout',
-	'IPv4 NS address fetch failed' : 'ip4nsfetchfail',
-	'DNSSEC validation attempted' : 'dnssecvalatt',
-	'lame delegations received' : 'lamedel',
-	'SERVFAIL received' : 'srvfail',
-	'DNSSEC NX validation succeeded' : 'dnssecnxvalsuc',
-	'IPv6 NS address fetch failed' : 'ip6nsfetchf',
-	'truncated responses received' : 'truncresp',
-	'IPv4 IXFR requested' : 'IXFR_req',
-	# Socket I/O
-	'UDP/IPv6 sockets closed' : 'u6soccl',
-	'TCP/IPv4 connections established' : 't4conest',
-	'UDP/IPv6 sockets opened' : 'u6socop',
-	'UDP/IPv6 socket connect failures' : 'u6socconf',
-	'UDP/IPv4 socket bind failures' : 'u4socbinf',
-	'UDP/IPv6 send errors' : 'u6serr',
-	'UDP/IPv4 sockets closed' : 'u4sockcl',
-	'UDP/IPv4 recv errors' : 'u4rerr',
-	'UDP/IPv4 connections established' : 'u4connest',
-	'TCP/IPv4 sockets closed' : 't4soccl',
-	'TCP/IPv4 socket connect failures' : 't4socconf',
-	'TCP/IPv4 sockets opened' : 't4socop',
-	'TCP/IPv4 connections accepted' : 't4conacc',
-	'UDP/IPv4 sockets opened' : 'u4socop',
-	'UDP/IPv6 connections established' : 'u6connest',
-	'TCP/IPv6 sockets opened' : 't6socop',
-	# Name Server Statistics
-	'responses with EDNS\(0\) sent' : 'r_edns_s',
-	'requests with EDNS\(0\) received' : 'r_edns_r',
-	'EDNS\(0\) query failures' : 'edns_q_fail',
-	'duplicate queries received' : 'dupqrec',
-	'auth queries rejected' : 'authqrej',
-	'truncated responses sent' : 'trresps',
-	'queries resulted in non authoritative answer' : 'qresnaa',
-	'queries resulted in SERVFAIL' : 'qressf',
-	'queries resulted in NXDOMAIN' : 'qresnxdom',
-	'queries resulted in nxrrset' : 'qresnxrr',
-	'responses sent' : 'rests',
-	'other query failures' : 'o_qfail',
-	'queries resulted in referral answer' : 'qresrefan',
-	'recursive queries rejected' : 'recqrej',
-	'IPv4 requests received' : 'ip4reqrec',
-	'queries resulted in authoritative answer' : 'qresaa',
-	'TCP requests received' : 'treqrec',
-	'queries resulted in successful answer' : 'qressuca',
-	'queries caused recursion' : 'qcaurec',
-	'queries dropped' : 'qdrop'
+	'queries with RTT > 1600ms' : 'rtt_1600_'
 	 }
 
-	return substitute
+	return data
 
-# Not used ATM
-def parse_arguments():
+def store_persistent_dictionary(path,d,key):
 
-        parser = argparse.ArgumentParser()
-        parser.add_argument('-s', '--stats', help='Text file that contains RNDC statistics output.')
-        args = parser.parse_args()
+        s = shelve.open(path)
+        try:
+                s[key] = d
+        finally:
+                s.close()
 
-        return args
+def load_persistent_dictionary(path,key):
+
+        s = shelve.open(path)
+        try:
+                existing = s[key]
+        finally:
+                s.close()
+                return existing
 
 def invoke_rndc_stats(stats_file_path, remfile):
 
@@ -125,187 +73,115 @@ def openfile(argv):
 
         return lines
 
-def parse_stats(raw, record_regex, view_regex, subsection_regex, dump_regex):
-
-	counters = {}
-	subsections = {}
-	views = {}
-	dump_mapped = {}
-
-	# Hetkel kalane loogika
-	# Nii peaks olema
-	# view -> section -> statistics
-
-	for line in reversed(raw):
-
-		if record_regex.match(line):
-			m = record_regex.match(line)
-			counters[m.group(2)] = m.group(1)
-
-		elif view_regex.match(line):
-			if counters:
-				m = view_regex.match(line)
-				views[m.group(1)] = counters
-				counters = {}
-
-		elif subsection_regex.match(line):
-			if not counters and views:
-				m = subsection_regex.match(line)
-				subsections[m.group(1)] = views
-				views = {}
-			elif counters and not views:
-				m = subsection_regex.match(line)
-				subsections[m.group(1)] = counters
-				counters = {}
-
-		elif dump_regex.match(line):
-			break
-		else:
-			pass
-
-	return subsections
-
-def get_timestamp(raw, pattern):
-
-	for line in reversed(raw):
-		if pattern.match(line):
-			
-			timestamp = pattern.match(line).group(1)
-			break
-
-	return timestamp
-
-def store_persistent_dictionary(path,d,key):
-
-	s = shelve.open(path)
-	try:
-		s[key] = d
-	finally:
-		s.close()
-
-def load_persistent_dictionary(path,key):
-
-	s = shelve.open(path)
-	try:
-		existing = s[key]
-	finally:
-		s.close()
-		return existing
-
-def dictionary_diff(dict_new,dict_old,timestamp_new,timestamp_old):
-
-	for k, v_new in dict_new.items():
-		if isinstance(v_new, dict):
-			#print format_key(k),
-			dictionary_diff(v_new, dict_old.get(k, 0),timestamp_new,timestamp_old)
-		else:
-			v_diff = subtract(v_new,dict_old.get(k,0))
-			timestamp_diff = subtract(timestamp_new,timestamp_old)
-
-			if v_diff < 0:
-				v_diff = v_new
-
-			v_per_second = int(v_diff) #/ float(timestamp_diff)
-
-			print_stats(k,v_per_second)
-			#print "{0} : {1}".format(format_key(k), str(v_per_second))
-
-def print_stats(key,value):
-	line = format_key(key) + ":" + str(value)
-	#print "%s: %s"  % (format_key(key),value)
-	print line,
-
-	#print '{0}: "{1}" '.format(format_key(key), str(value))
-
-def format_key(key):
-
-
-	# Default key names are too long for cacti to handle
-	# Create substitutions
-
-	key_string_patterns = dictionary_key_substitute()
-
-	for k, v in key_string_patterns.items():
-		if re.match(k, key):
-			key = v
-
-	#stripped = re.sub(pattern,'_',key)
-
-	return key
-
 def subtract(new_value,old_value):
-	
-	diff = int(new_value) - int(old_value)
 
-	return diff
+        diff = int(new_value) - int(old_value)
 
-# debug only
-def myprint(d):
-	for k, v in d.iteritems():
-		if isinstance(v, dict):
-			print "{0}".format(k)
-			myprint(v)
-		else:
-			print "{0} : {1}".format(k, v)
+	if diff < 0:
+		diff = new_value
+	else:
+        	diff = diff
+
+        return diff
+
+def rndc_parser(raw_data):
+
+	stats = {}
+
+	culm_rtt10 = 0
+	key_rtt10 = ""
+	rtt10 = re.compile('^\s*(\d+) (queries with RTT < 10ms)')
+	culm_rtt10100 = 0
+	key_rtt10100 = ""
+	rtt10100 = re.compile('^\s*(\d+) (queries with RTT 10-100ms)')
+	culm_rtt100500 = 0
+	key_rtt100500 = ""
+	rtt100500 = re.compile('^\s*(\d+) (queries with RTT 100-500ms)')
+	culm_rtt500800 = 0
+	key_rtt500800 = ""
+	rtt500800 = re.compile('^\s*(\d+) (queries with RTT 500-800ms)')
+	culm_rtt8001600 = 0
+	key_rtt8001600 = ""
+	rtt8001600 = re.compile('^\s*(\d+) (queries with RTT 800-1600ms)')
+	culm_rtt1600 = 0
+	key_rtt1600 = ""
+	rtt1600 = re.compile('^\s*(\d+) (queries with RTT > 1600ms)')
+
+	dump_regex=re.compile("\+\+\+ Statistics Dump \+\+\+ \((\d+)\)")
+
+	for line in reversed(raw_data):
+		if dump_regex.match(line):
+			break
+		elif rtt10.match(line):
+			value = int(rtt10.match(line).group(1))
+			key_rtt10 = "rtt__10"
+			culm_rtt10 = culm_rtt10 + value
+		elif rtt10100.match(line):
+			value = int(rtt10100.match(line).group(1))
+			key_rtt10100 = "rtt_10_100"
+			culm_rtt10100 = culm_rtt10100 + value
+		elif rtt100500.match(line):
+			value = int(rtt100500.match(line).group(1))
+			key_rtt100500 = "rtt_100_500"
+			culm_rtt100500 = culm_rtt100500 + value
+		elif rtt500800.match(line):
+			value = int(rtt500800.match(line).group(1))
+			key_rtt500800 = "rtt_500_800"
+			culm_rtt500800 = culm_rtt500800 + value
+		elif rtt8001600.match(line):
+			value = int(rtt8001600.match(line).group(1))
+			key_rtt8001600 = "rtt_800_1600"
+			culm_rtt8001600 = culm_rtt8001600 + value
+		elif rtt1600.match(line):
+			value = int(rtt1600.match(line).group(1))
+			key_rtt1600 = "rtt_1600_"
+			culm_rtt1600 = culm_rtt1600 + value
+
+	if key_rtt10:
+		stats[key_rtt10] = culm_rtt10
+	if key_rtt10100:
+		stats[key_rtt10100] = culm_rtt10100
+	if key_rtt100500:
+		stats[key_rtt100500] = culm_rtt100500
+	if key_rtt500800:
+		stats[key_rtt500800] = culm_rtt500800
+	if key_rtt8001600:
+		stats[key_rtt8001600] = culm_rtt8001600
+	if key_rtt1600:
+		stats[key_rtt1600] = culm_rtt1600
+
+	return stats
 
 def main():
 
-	#########################
-	# Variables
-	#########################
-	
-	# I will semi-hardcode my paths, because code is going to remove system file
-	# I do not want to rm arbitrary file, because I messed up an argument
-	#args = parse_arguments()
 	stats_file_path = '/var/cache/bind/named.stats'
-	persist_database_path = '/tmp/rndc_stats.db'
+	persist_database_path = '/tmp/rndc_rtt_stats.db'
 
-	# Works, but off for debugging
-	# Enable in prod
 	remove_stats_file_after_invoke = True
-
-	record_regex=re.compile("^\s+(\d+) (.+)")
-	subsection_regex=re.compile("\+\+ (.+) \+\+")
-	view_regex=re.compile("(?:\[View: (.+)\])")
-	dump_regex=re.compile("\+\+\+ Statistics Dump \+\+\+ \((\d+)\)")
-
-	########################
-	# Process data
-	########################
 
         raw_data = invoke_rndc_stats(stats_file_path, remove_stats_file_after_invoke)
 
-	# Currently easier to get separately than attempt to return with parse_stats
-	# Timestamp does not play well establised dict structure, and returning multiple distinct values is complicated
-	# Refactor later
-	timestamp_new = get_timestamp(raw_data, dump_regex)
+	stats = rndc_parser(raw_data)
+	stats_diff = {}
 
-	parsed_stats_new = parse_stats(raw_data, record_regex, view_regex, subsection_regex, dump_regex)
-
-	# If database file is present in system
-	# Load old database
+	#persistent storage start
 	if os.path.isfile(persist_database_path):
-		parsed_stats_old = load_persistent_dictionary(persist_database_path,'statistics')
-		timestamp_old = load_persistent_dictionary(persist_database_path, 'timestamp')
-	else:
-		parsed_stats_old = parsed_stats_new
-		timestamp_old = timestamp_new
+                parsed_stats_old = load_persistent_dictionary(persist_database_path,'statistics')
+        else:
+                parsed_stats_old = stats
 
-	# Store new data in dict
-	store_persistent_dictionary(persist_database_path,parsed_stats_new,'statistics')
-	store_persistent_dictionary(persist_database_path,timestamp_new,'timestamp')
+	store_persistent_dictionary(persist_database_path,stats,'statistics')
 
-	dictionary_diff(parsed_stats_new, parsed_stats_old, timestamp_new, timestamp_old)
+	
+	for k, v in stats.items():
+		v_old = parsed_stats_old.get(k, 0)
+		stats_diff[k] = subtract(v,v_old)
+		#stats_diff[k] = v - parsed_stats_old.get(k, 0) # returns value if k exists in d2, otherwise 0
 
-
-	#######################################################
-	# Debug section
-	#######################################################
-
-	# store_persistent_dictionary('/tmp/diff.db', diff)
-	# print timestamp_new
-	# print timestamp_diff
-	# myprint(parsed_stats_new)
+	for k, v in stats_diff.items():
+		#print "%s:%s" % (k,v)
+		line = k + ":" + str(v)
+		print line,	
 
 if __name__ == "__main__":
 
