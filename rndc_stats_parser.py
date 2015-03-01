@@ -256,7 +256,7 @@ def main():
 
 	# Works, but off for debugging
 	# Enable in prod
-	remove_stats_file_after_invoke = False
+	remove_stats_file_after_invoke = True
 
 	record_regex=re.compile("^\s+(\d+) (.+)")
 	subsection_regex=re.compile("\+\+ (.+) \+\+")
