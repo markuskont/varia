@@ -24,6 +24,7 @@ def dictionary_key_substitute():
 	'IPv6 queries sent' : 'ip6qsent',
 	'IPv4 queries sent' : 'ip4qsent',
 	'IPv4 NS address fetches' : 'ip4nsfetch',
+	'IPv6 NS address fetches' : 'ip6nsfetch',
 	'query retries' : 'qret',
 	'query timeouts' : 'qtimeout',
 	'IPv4 NS address fetch failed' : 'ip4nsfetchfail',
@@ -33,6 +34,7 @@ def dictionary_key_substitute():
 	'DNSSEC NX validation succeeded' : 'dnssecnxvalsuc',
 	'IPv6 NS address fetch failed' : 'ip6nsfetchf',
 	'truncated responses received' : 'truncresp',
+	'IPv4 IXFR requested' : 'IXFR_req',
 	# Socket I/O
 	'UDP/IPv6 sockets closed' : 'u6soccl',
 	'TCP/IPv4 connections established' : 't4conest',
@@ -48,6 +50,8 @@ def dictionary_key_substitute():
 	'TCP/IPv4 sockets opened' : 't4socop',
 	'TCP/IPv4 connections accepted' : 't4conacc',
 	'UDP/IPv4 sockets opened' : 'u4socop',
+	'UDP/IPv6 connections established' : 'u6connest',
+	'TCP/IPv6 sockets opened' : 't6socop',
 	# Name Server Statistics
 	'responses with EDNS\(0\) sent' : 'r_edns_s',
 	'requests with EDNS\(0\) received' : 'r_edns_r',
@@ -66,7 +70,8 @@ def dictionary_key_substitute():
 	'queries resulted in authoritative answer' : 'qresaa',
 	'TCP requests received' : 'treqrec',
 	'queries resulted in successful answer' : 'qressuca',
-	'queries caused recursion' : 'qcaurec'
+	'queries caused recursion' : 'qcaurec',
+	'queries dropped' : 'qdrop'
 	 }
 
 	return substitute
