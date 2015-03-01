@@ -17,6 +17,23 @@ def rndc_rtt():
 
 	return data
 
+def store_persistent_dictionary(path,d,key):
+
+        s = shelve.open(path)
+        try:
+                s[key] = d
+        finally:
+                s.close()
+
+def load_persistent_dictionary(path,key):
+
+        s = shelve.open(path)
+        try:
+                existing = s[key]
+        finally:
+                s.close()
+                return existing
+
 def invoke_rndc_stats(stats_file_path, remfile):
 
 	cmd='rndc stats'
@@ -55,6 +72,17 @@ def openfile(argv):
                 lines = [line.rstrip('\n') for line in file]
 
         return lines
+
+def subtract(new_value,old_value):
+
+        diff = int(new_value) - int(old_value)
+
+	if diff < 0:
+		diff = new_value
+	else:
+        	diff = diff
+
+        return diff
 
 def rndc_parser(raw_data):
 
@@ -127,15 +155,30 @@ def rndc_parser(raw_data):
 def main():
 
 	stats_file_path = '/var/cache/bind/named.stats'
-	persist_database_path = '/tmp/rndc_stats.db'
+	persist_database_path = '/tmp/rndc_rtt_stats.db'
 
 	remove_stats_file_after_invoke = True
 
         raw_data = invoke_rndc_stats(stats_file_path, remove_stats_file_after_invoke)
 
 	stats = rndc_parser(raw_data)
+	stats_diff = {}
 
+	#persistent storage start
+	if os.path.isfile(persist_database_path):
+                parsed_stats_old = load_persistent_dictionary(persist_database_path,'statistics')
+        else:
+                parsed_stats_old = stats
+
+	store_persistent_dictionary(persist_database_path,stats,'statistics')
+
+	
 	for k, v in stats.items():
+		v_old = parsed_stats_old.get(k, 0)
+		stats_diff[k] = subtract(v,v_old)
+		#stats_diff[k] = v - parsed_stats_old.get(k, 0) # returns value if k exists in d2, otherwise 0
+
+	for k, v in stats_diff.items():
 		#print "%s:%s" % (k,v)
 		line = k + ":" + str(v)
 		print line,	
