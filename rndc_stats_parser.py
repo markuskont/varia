@@ -205,7 +205,7 @@ def dictionary_diff(dict_new,dict_old,timestamp_new,timestamp_old):
 			#print "{0} : {1}".format(format_key(k), str(v_per_second))
 
 def print_stats(key,value):
-	line = format_key(key) + ": " + str(value)
+	line = format_key(key) + ":" + str(value)
 	#print "%s: %s"  % (format_key(key),value)
 	print line,
 
