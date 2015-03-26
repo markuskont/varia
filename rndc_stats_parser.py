@@ -12,7 +12,9 @@ def rndc_rtt():
 	'queries with RTT 100-500ms' : 'rtt_100_500',
 	'queries with RTT 500-800ms' : 'rtt_500_800',
 	'queries with RTT 800-1600ms' : 'rtt_800_1600',
-	'queries with RTT > 1600ms' : 'rtt_1600_'
+	'queries with RTT > 1600ms' : 'rtt_1600_',
+	'(\d+) UDP/IPv4 connections established' : 'u4connest',
+	'(\d+) UDP/IPv6 connections established' : 'u6connest'
 	 }
 
 	return data
@@ -88,6 +90,7 @@ def rndc_parser(raw_data):
 
 	stats = {}
 
+	# Round trip time variables
 	culm_rtt10 = 0
 	key_rtt10 = ""
 	rtt10 = re.compile('^\s*(\d+) (queries with RTT < 10ms)')
@@ -106,6 +109,22 @@ def rndc_parser(raw_data):
 	culm_rtt1600 = 0
 	key_rtt1600 = ""
 	rtt1600 = re.compile('^\s*(\d+) (queries with RTT > 1600ms)')
+
+	# Connection variables
+	culm_u4connest = 0
+	key_u4connest = ""
+	u4connest = re.compile('^\s*(\d+) UDP/IPv4 connections established')
+	culm_u6connest = 0
+	key_u6connest = ""
+	u6connest = re.compile('^\s*(\d+) UDP/IPv6 connections established')
+
+	# Record variables
+	culm_record_ipv4 = 0
+	key_record_ipv4 = ""
+	record_ipv4 = re.compile('(\d+) A$')
+	culm_record_ipv6 = 0
+	key_record_ipv6 = ""
+	record_ipv6 = re.compile('(\d+) AAAA$')
 
 	dump_regex=re.compile("\+\+\+ Statistics Dump \+\+\+ \((\d+)\)")
 
@@ -136,6 +155,22 @@ def rndc_parser(raw_data):
 			value = int(rtt1600.match(line).group(1))
 			key_rtt1600 = "rtt_1600_"
 			culm_rtt1600 = culm_rtt1600 + value
+		elif u4connest.match(line):
+			value = int(u4connest.match(line).group(1))
+			key_u4connest = "u4connest"
+			culm_u4connest = culm_u4connest + value
+		elif u6connest.match(line):
+			value = int(u6connest.match(line).group(1))
+			key_u6connest = "u6connest"
+			culm_u6connest = culm_u6connest + value
+		elif record_ipv4.match(line):
+			value = int(record_ipv4.match(line).group(1))
+			key_record_ipv4 = "record_ipv4"
+			culm_record_ipv4 = culm_record_ipv4 + value
+		elif record_ipv6.match(line):
+			value = int(record_ipv6.match(line).group(1))
+			key_record_ipv6 = "record_ipv6"
+			culm_record_ipv6 = culm_record_ipv6 + value
 
 	if key_rtt10:
 		stats[key_rtt10] = culm_rtt10
@@ -149,6 +184,14 @@ def rndc_parser(raw_data):
 		stats[key_rtt8001600] = culm_rtt8001600
 	if key_rtt1600:
 		stats[key_rtt1600] = culm_rtt1600
+	if key_u4connest:
+		stats[key_u4connest] = culm_u4connest
+	if key_u6connest:
+		stats[key_u6connest] = culm_u6connest
+	if key_record_ipv4:
+		stats[key_record_ipv4] = culm_record_ipv4
+	if key_record_ipv6:
+		stats[key_record_ipv6] = culm_record_ipv6
 
 	return stats
 
