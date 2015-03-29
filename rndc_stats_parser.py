@@ -3,6 +3,25 @@
 import sys, os, argparse, re, json, copy, shelve
 from pprint import pprint
 
+def varmap():
+	stats = {
+	'rtt_10':'^\s*(\d+) queries with RTT < 10ms',
+	'rtt10100':'^\s*(\d+) queries with RTT 10-100ms',
+	'rtt100500':'^\s*(\d+) queries with RTT 100-500ms',
+	'rtt500800':'^\s*(\d+) queries with RTT 500-800ms',
+	'rtt8001600':'^\s*(\d+) queries with RTT 800-1600ms',
+	'rtt1600':'^\s*(\d+) queries with RTT > 1600ms',
+	'u4connest':'^\s*(\d+) UDP/IPv4 connections established',
+	'u6connest':'^\s*(\d+) UDP/IPv6 connections established',
+	'record_a':'^\s*(\d+) A$',
+	'record_aaaa':'^\s*(\d+) AAAA$',
+	'record_ns':'^\s*(\d+) NS$',
+	'record_cname':'^\s*(\d+) CNAME$',
+	'record_mx':'^\s*(\d+) MX$',
+	}
+
+	return stats
+
 def store_persistent_dictionary(path,d,key):
 
         s = shelve.open(path)
@@ -70,6 +89,31 @@ def subtract(new_value,old_value):
 
         return diff
 
+def parse(raw_data):
+	
+	stats = varmap()
+	#culm = 0
+	counter = {}
+	break_pattern = ''
+	dump_regex=re.compile("\+\+\+ Statistics Dump \+\+\+ \((\d+)\)")
+
+	for line in reversed(raw_data):
+		for k, regex in stats.iteritems():
+
+			pattern = re.compile(regex)
+
+			if pattern.match(line):
+				if k not in counter:
+					counter[k] = 0
+
+
+				counter[k] = counter[k] + int(pattern.match(line).group(1))
+
+	return counter
+	
+
+# This is crap
+# Not used
 def rndc_parser(raw_data):
 
 	stats = {}
@@ -197,7 +241,7 @@ def main():
 
         raw_data = invoke_rndc_stats(stats_file_path, remove_stats_file_after_invoke)
 
-	stats = rndc_parser(raw_data)
+	stats = parse(raw_data)
 	stats_diff = {}
 
 	#persistent storage start
@@ -208,11 +252,9 @@ def main():
 
 	store_persistent_dictionary(persist_database_path,stats,'statistics')
 
-	
 	for k, v in stats.items():
 		v_old = parsed_stats_old.get(k, 0)
 		stats_diff[k] = subtract(v,v_old)
-		#stats_diff[k] = v - parsed_stats_old.get(k, 0) # returns value if k exists in d2, otherwise 0
 
 	for k, v in stats_diff.items():
 		#print "%s:%s" % (k,v)
