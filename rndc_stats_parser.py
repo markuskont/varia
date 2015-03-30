@@ -5,12 +5,12 @@ from pprint import pprint
 
 def varmap():
 	stats = {
-	'rtt_10':'^\s*(\d+) queries with RTT < 10ms',
-	'rtt10100':'^\s*(\d+) queries with RTT 10-100ms',
-	'rtt100500':'^\s*(\d+) queries with RTT 100-500ms',
-	'rtt500800':'^\s*(\d+) queries with RTT 500-800ms',
-	'rtt8001600':'^\s*(\d+) queries with RTT 800-1600ms',
-	'rtt1600':'^\s*(\d+) queries with RTT > 1600ms',
+	'rtt__10':'^\s*(\d+) queries with RTT < 10ms',
+	'rtt_10_100':'^\s*(\d+) queries with RTT 10-100ms',
+	'rtt_100_500':'^\s*(\d+) queries with RTT 100-500ms',
+	'rtt_500_800':'^\s*(\d+) queries with RTT 500-800ms',
+	'rtt_800_1600':'^\s*(\d+) queries with RTT 800-1600ms',
+	'rtt_1600_':'^\s*(\d+) queries with RTT > 1600ms',
 	'u4connest':'^\s*(\d+) UDP/IPv4 connections established',
 	'u6connest':'^\s*(\d+) UDP/IPv6 connections established',
 	'record_a':'^\s*(\d+) A$',
