@@ -18,6 +18,7 @@ def varmap():
 	'record_ns':'^\s*(\d+) NS$',
 	'record_cname':'^\s*(\d+) CNAME$',
 	'record_mx':'^\s*(\d+) MX$',
+	'record_ptr':'^\s*(\d+) PTR$',
 	}
 
 	return stats
