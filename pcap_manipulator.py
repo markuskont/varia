@@ -43,8 +43,14 @@ def main():
 	for packet in pkts:
 		if (packet.haslayer(IPv6)):
 
+#			packet[Ether].type= 0x800
+#			packet[IP].src=mapping.get(packet.getlayer(IPv6).src)
+#			packet[IP].src=mapping.get(packet.getlayer(Ether).dst)
+
 			ipv6_src_mac = packet.getlayer(Ether).src
 			ipv6_dst_mac = packet.getlayer(Ether).dst
+
+#			send(packet)
 
 			ipv6_src_addr = packet.getlayer(IPv6).src
 			ipv6_dst_addr = packet.getlayer(IPv6).dst
@@ -55,14 +61,16 @@ def main():
 			ipv4_src_addr = mapping.get(ipv6_src_addr)
 			ipv4_dst_addr = mapping.get(ipv6_dst_addr)
 
-			newpacket = Ether(src=ipv6_src_mac, dst=ipv6_dst_mac, type=0x800)/IP(src=ipv4_src_addr, dst=ipv4_dst_addr, proto=ipv6_proto, len=ipv6_len)/packet.getlayer(IPv6).payload
+			newpacket = Ether(src=ipv6_src_mac, dst=ipv6_dst_mac, type=0x800)/IP(src=ipv4_src_addr, dst=ipv4_dst_addr, proto=ipv6_proto)/packet.getlayer(IPv6).payload
+
+			newpacket.time = packet.time
 			#newpacket = Ether(src=ipv6_src_mac, dst=ipv6_dst_mac, type=ipv6_type)
 			#newpacket = newpacket/IP(src=ipv4_src_addr, dst=ipv4_dst_addr, proto=ipv6_proto, len=ipv6_len)/packet.getlayer(IPv6).payload
 
 			pktdump.write(newpacket)
 
 			# Debug section
-			print '---------------------------------------'
+#			print '---------------------------------------'
 			newpacket.show2()
 #			print ipv4_src_addr
 #			print ipv4_dst_addr
