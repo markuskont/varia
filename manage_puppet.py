@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import sys, os, argparse, re, json, copy, subprocess, hashlib, datetime
+import sys, os, argparse, re, json, copy, subprocess, hashlib, datetime, yaml
 from stat import *
 
 ######################################
@@ -21,6 +21,7 @@ def parse_arguments(environments):
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-e', '--environment', choices=environments, default='production', help='Puppet environment')
 	parser.add_argument('-d', '--cadir', default='/tmp/CA/', help='Absolute path to CA root directory')
+	#parser.add_argument('-m', '--mapfile', default='/tmp/CA/alt_name_map.yaml', help='Config file, which contains node definitions.')
 	args = parser.parse_args()
 
 	return args
@@ -68,6 +69,8 @@ CA_KEY = CADIR + '/' + 'cakey.pem'
 
 X509_EXTRA_ARGS = ()
 
+ALT_NAME_MAP_SOURCE = CADIR + '/' + 'node_map.yaml'
+
 ############################
 # END SHARED LOGIC
 # START NODE EXTRACTION PART
@@ -104,13 +107,6 @@ def extract_nodes_from_puppet_env():
 	files = list(recursive_file_gen(puppet_rootdir, pattern_puppet_site_manifest))
 
 	nodes = extract_data_from_file(files, pattern_puppet_node_definition)
-
-	# DEBUG OUTPUT
-	print "Environment: " + puppet_rootdir
-	print "CA root dir: " + CADIR
-	print "CA key file: " + CA_KEY
-	print "CA certificate file: " + CA_CERT
-	# END DEBUG OUTPUT
 
 	return nodes
 
@@ -193,8 +189,25 @@ def gencert(nodes, rootdir=CADIR, keysize=KEY_SIZE, days=DAYS, ca_cert=CA_CERT, 
 def main():
 
 	validate_CA_files()
-	nodes = extract_nodes_from_puppet_env()
-	gencert(nodes)
+
+	if not os.path.isfile(ALT_NAME_MAP_SOURCE):
+		print "No configuration file with node definitions and subject alternative name mappings!"
+		print "Creating %s" % (ALT_NAME_MAP_SOURCE)
+		data = extract_nodes_from_puppet_env()
+		with open(ALT_NAME_MAP_SOURCE, 'w') as outfile:
+			outfile.write ( yaml.dump (data))
+		print "Please verify data in %s and re-execute the script" % (ALT_NAME_MAP_SOURCE)
+		sys.exit(1)
+	else:
+		print "Loading node definitions from %s" % (ALT_NAME_MAP_SOURCE)
+		with open (ALT_NAME_MAP_SOURCE, 'r') as infile:
+			nodes = yaml.load(infile)
+
+		if type(nodes) is list:
+			print "Generating signed certificates"
+			gencert(nodes)
+		else:
+			print "Data format error"
 
 if __name__ == "__main__":
 
