@@ -3,15 +3,6 @@
 import sys, os, argparse, re, json, copy, subprocess, hashlib, datetime, yaml
 from stat import *
 
-######################################
-# CODE EXAMPLES AND DEBUG STUFF
-# NOT TO BE USED IN CORE FUNCTIONALITY
-######################################
-
-mapping = {
-'2001:470:e5bf:dead:4957:2174:e82c:4887':'10.21.74.87',
-}
-
 ####################
 # START SHARED LOGIC
 ####################
@@ -20,21 +11,21 @@ def parse_arguments(environments):
 
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-e', '--environment', choices=environments, default='production', help='Puppet environment')
-	parser.add_argument('-d', '--cadir', default='/tmp/CA/', help='Absolute path to CA root directory')
+	parser.add_argument('-c', '--cadir', default='/tmp/CA/', help='Absolute path to CA root directory')
+	#parser.add_argument('-d', '--datadir', default='/tmp/CA/', help='Absolute path to CA root directory')
 	#parser.add_argument('-m', '--mapfile', default='/tmp/CA/alt_name_map.yaml', help='Config file, which contains node definitions.')
 	args = parser.parse_args()
 
 	return args
 
-def check_dir_list(args_list):
+def check_dir(path):
 
 	folder_mask=0700
 
-	for path in args_list:
-		if not os.path.exists(path):
-			os.mkdir(path)
-		if str(oct(os.stat(path)[ST_MODE])[-4:]) != str(folder_mask):
-			os.chmod(path, folder_mask)
+	if not os.path.exists(path):
+		os.mkdir(path)
+	if str(oct(os.stat(path)[ST_MODE])[-4:]) != str(folder_mask):
+		os.chmod(path, folder_mask)
 
 def validate_CA_files():
 
@@ -84,14 +75,14 @@ def recursive_file_gen(rootdir, pattern):
 
 def extract_data_from_file(files, pattern):
 
-	results = []
+	results = {}
 	
 	for filename in files:
 		fd = open(filename)
 
 		for line in fd:
 			if pattern.match(line):
-				results.append(pattern.match(line).group(1))
+				results[pattern.match(line).group(1)] = ''
 		fd.close()
 
 	return results
@@ -106,9 +97,7 @@ def extract_nodes_from_puppet_env():
 
 	files = list(recursive_file_gen(puppet_rootdir, pattern_puppet_site_manifest))
 
-	nodes = extract_data_from_file(files, pattern_puppet_node_definition)
-
-	return nodes
+	return extract_data_from_file(files, pattern_puppet_node_definition)
 
 ##########################################
 # END NODE EXTRACTION PART
@@ -129,7 +118,7 @@ ST                     = Harjumaa
 L                      = Tallinn
 O                      = Spin TEK AS
 OU                     = Administration
-CN                     = %(fqdn)s.spin.ee
+CN                     = %(FQDN)s
 emailAddress           = admin@spin.ee
 
 [ v3_req ]
@@ -137,50 +126,99 @@ emailAddress           = admin@spin.ee
 basicConstraints = CA:FALSE
 keyUsage = nonRepudiation, digitalSignature, keyEncipherment
 
+"""
+
+OPENSSL_SAN_TEMPLATE= """
 subjectAltName = @alt_names
 
 [ alt_names ]
-DNS.1 = %(fqdn)s
-DNS.2 = %(fqdn)s
+DNS.1 = %(SAN)s
 """
 
-def openssl(*args):
-	cmdline = [OPENSSL] + list(args)
+
+def openssl(argument_list):
+	cmdline = [OPENSSL] + argument_list
 	subprocess.check_call(cmdline)
 
-def gencert(nodes, rootdir=CADIR, keysize=KEY_SIZE, days=DAYS, ca_cert=CA_CERT, ca_key=CA_KEY):
+def gencert(nodes):
 
 	pattern_hostname_from_fqdn = re.compile("(\S+)\.\S+\.\S+$")
 
-	ca_working_folders = [ 'config.d', 'requests', 'private', 'certificates']
-	ca_working_folders = [ CADIR + '/' + folder for folder in ca_working_folders]
+	ca_working_folders =	{	
+					'conf':'config.d', 
+					'csr':'requests', 
+					'key':'private',
+					'cert':'certificates',
+				}
 
-#	ca_config_rootdir=ca_working_folders[0]
-#	ca_req_rootdir=ca_working_folders[1]
-#	ca_key_rootdir=ca_working_folders[2]
-#	ca_cert_rootdir=ca_working_folders[3]
+	for key, value in ca_working_folders.iteritems():
+		newvalue = CADIR + '/' + value
+		ca_working_folders[key] = newvalue
+		check_dir(ca_working_folders[key])
 
-	check_dir_list(ca_working_folders)
+	for node_fqdn, node_alt_name in nodes.iteritems():
 
-	for node_fqdn in nodes:
+		ca_file_paths = {}
+		
+		for key, value in ca_working_folders.iteritems():
+			ca_file_paths[key] = value + '/' + node_fqdn + '.' + key
 
-		hostname = pattern_hostname_from_fqdn.match(node_fqdn).group(1)
+		#hostname = pattern_hostname_from_fqdn.match(node_fqdn).group(1)
 
-		conf_file_abs_path = ca_working_folders[0] + '/' + node_fqdn + '.conf'
-		req_file_abs_path = ca_working_folders[1] + '/' + node_fqdn + '.csr'
-		key_file_abs_path = ca_working_folders[2] + '/' + node_fqdn + '.key'
-		cert_file_abs_path = ca_working_folders[3] + '/' + node_fqdn + '.cert'
+		with open (ca_file_paths.get('conf'), 'w') as config:
+			config.write(OPENSSL_CONFIG_TEMPLATE % {'FQDN': node_fqdn})
+			if node_alt_name:
+				config.write(OPENSSL_SAN_TEMPLATE % {'SAN': node_alt_name})
 
-		config = open(conf_file_abs_path, 'w')
-		config.write(OPENSSL_CONFIG_TEMPLATE % {'fqdn': hostname})
-		config.close()
 
-		if not os.path.isfile(key_file_abs_path):
-			openssl('genrsa', '-out', key_file_abs_path, str(keysize))
 
-		if not os.path.isfile(cert_file_abs_path):
-			openssl('req', '-new', '-key', key_file_abs_path, '-out', req_file_abs_path, '-config', conf_file_abs_path)
-			openssl('x509', '-req', '-days', str(days), '-in', req_file_abs_path, '-CA', ca_cert, '-CAkey', ca_key, '-set_serial', '0x%s' % hashlib.md5(node_fqdn + str(datetime.datetime.now())).hexdigest(), '-out', cert_file_abs_path, '-extensions', 'v3_req', '-extfile', conf_file_abs_path, *X509_EXTRA_ARGS)
+		if not os.path.isfile(ca_file_paths.get('key')):
+
+			openssl_keygen_arguments = [
+				'genrsa',
+				'-out',
+				ca_file_paths.get('key'),
+				str(KEY_SIZE)
+			]
+
+			openssl(openssl_keygen_arguments)
+
+		if not os.path.isfile(ca_file_paths.get('cert')):
+
+			openssl_csr_arguments = [
+				'req',
+				'-new',
+				'-key',
+				ca_file_paths.get('key'),
+				'-out',
+				ca_file_paths.get('csr'),
+				'-config',
+				ca_file_paths.get('conf'),
+			]
+
+			openssl_signature_arguments = [
+				'x509',
+				'-req',
+				'-days',
+				str(DAYS),
+				'-in',
+				ca_file_paths.get('csr'),
+				'-CA',
+				CA_CERT,
+				'-CAkey',
+				CA_KEY,
+				'-set_serial',
+				'0x%s' % hashlib.md5(node_fqdn + str(datetime.datetime.now())).hexdigest(),
+				'-out',
+				ca_file_paths.get('cert'),
+				'-extensions',
+				'v3_req',
+				'-extfile',
+				ca_file_paths.get('conf'),
+			]
+
+			openssl(openssl_csr_arguments)
+			openssl(openssl_signature_arguments)
 
 ##################
 # END OPENSSL PART
@@ -195,7 +233,7 @@ def main():
 		print "Creating %s" % (ALT_NAME_MAP_SOURCE)
 		data = extract_nodes_from_puppet_env()
 		with open(ALT_NAME_MAP_SOURCE, 'w') as outfile:
-			outfile.write ( yaml.dump (data))
+			outfile.write ( yaml.dump(data, default_flow_style=False))
 		print "Please verify data in %s and re-execute the script" % (ALT_NAME_MAP_SOURCE)
 		sys.exit(1)
 	else:
@@ -203,7 +241,7 @@ def main():
 		with open (ALT_NAME_MAP_SOURCE, 'r') as infile:
 			nodes = yaml.load(infile)
 
-		if type(nodes) is list:
+		if type(nodes) is dict:
 			print "Generating signed certificates"
 			gencert(nodes)
 		else:
