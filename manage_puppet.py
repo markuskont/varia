@@ -12,7 +12,7 @@ def parse_arguments(environments):
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-e', '--environment', choices=environments, default='production', help='Puppet environment')
 	parser.add_argument('-c', '--cadir', default='/tmp/CA/', help='Absolute path to CA root directory')
-	#parser.add_argument('-d', '--datadir', default='/tmp/CA/', help='Absolute path to CA root directory')
+	parser.add_argument('-d', '--datadir', default='/tmp/CA/', help='Absolute path to root directory of generated client keys and certificates')
 	#parser.add_argument('-m', '--mapfile', default='/tmp/CA/alt_name_map.yaml', help='Config file, which contains node definitions.')
 	args = parser.parse_args()
 
@@ -27,38 +27,18 @@ def check_dir(path):
 	if str(oct(os.stat(path)[ST_MODE])[-4:]) != str(folder_mask):
 		os.chmod(path, folder_mask)
 
-def validate_CA_files():
-
-	if not os.path.exists(CADIR):
-		print "CA filesystem root does not exist!"
-		print "Please consider creating with the following command:"
-		print "mkdir %s && chmod 700 %s" %(CADIR, CADIR)
-		sys.exit(2)
-	if not os.path.isfile(CA_KEY):
-		print "CA Key file does not exist!"
-		print "Please consider creating with the following command:"
-		print "openssl genrsa -out %s/cakey.pem 4096 && chmod 0600 %s/cakey.pem" %(CADIR,CADIR)
-		sys.exit(2)
-	if not os.path.isfile(CA_CERT):
-		print "CA Certificate file does not exist!"
-		print "Please consider creating with the following command:"
-		print "openssl req -new -x509 -days 3650 -key %s/cakey.pem -out %s/cacert.pem" % (CADIR,CADIR)
-		sys.exit(2)
-			
-		
 # GLOBAL VARIABLES
 PUPPET_ROOT_DIR="/etc/puppet/environments/"
 PUPPET_ENV_DIRS = os.listdir(PUPPET_ROOT_DIR)
 ARGS = parse_arguments(PUPPET_ENV_DIRS)
 SELECTED_ENV = ARGS.environment
 CADIR = os.path.abspath(ARGS.cadir)
+DATADIR = os.path.abspath(ARGS.datadir)
 OPENSSL = '/usr/bin/openssl'
 KEY_SIZE = 1024
 DAYS = 3650
 CA_CERT = CADIR + '/' + 'cacert.pem'
 CA_KEY = CADIR + '/' + 'cakey.pem'
-
-X509_EXTRA_ARGS = ()
 
 ALT_NAME_MAP_SOURCE = CADIR + '/' + 'node_map.yaml'
 
@@ -152,7 +132,7 @@ def gencert(nodes):
 				}
 
 	for key, value in ca_working_folders.iteritems():
-		newvalue = CADIR + '/' + value
+		newvalue = DATADIR + '/' + value
 		ca_working_folders[key] = newvalue
 		check_dir(ca_working_folders[key])
 
@@ -182,6 +162,7 @@ def gencert(nodes):
 			]
 
 			openssl(openssl_keygen_arguments)
+			os.chmod(ca_file_paths.get('key'), 0600)
 
 		if not os.path.isfile(ca_file_paths.get('cert')):
 
@@ -226,8 +207,26 @@ def gencert(nodes):
 
 def main():
 
-	validate_CA_files()
-
+	if not os.path.exists(CADIR):
+		print "CA filesystem root directory does not exist!"
+		print "Please consider creating with the following command:"
+		print "mkdir %s && chmod 700 %s" %(CADIR, CADIR)
+		sys.exit(1)
+	if not os.path.exists(DATADIR):
+		print "Data filesystem root directory does not exist!"
+		print "Please consider creating with the following command:"
+		print "mkdir %s && chmod 700 %s" %(DATADIR, DATADIR)
+		sys.exit(1)
+	if not os.path.isfile(CA_KEY):
+		print "CA Key file does not exist!"
+		print "Please consider creating with the following command:"
+		print "openssl genrsa -out %s/cakey.pem 4096 && chmod 0600 %s/cakey.pem" %(CADIR,CADIR)
+		sys.exit(1)
+	if not os.path.isfile(CA_CERT):
+		print "CA Certificate file does not exist!"
+		print "Please consider creating with the following command:"
+		print "openssl req -new -x509 -days 3650 -key %s/cakey.pem -out %s/cacert.pem" % (CADIR,CADIR)
+		sys.exit(1)
 	if not os.path.isfile(ALT_NAME_MAP_SOURCE):
 		print "No configuration file with node definitions and subject alternative name mappings!"
 		print "Creating %s" % (ALT_NAME_MAP_SOURCE)
