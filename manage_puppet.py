@@ -108,11 +108,14 @@ keyUsage = nonRepudiation, digitalSignature, keyEncipherment
 
 """
 
-OPENSSL_SAN_TEMPLATE= """
+OPENSSL_SAN_TEMPLATE_HEADER= """
 subjectAltName = @alt_names
 
 [ alt_names ]
-DNS.1 = %(SAN)s
+"""
+
+OPENSSL_SAN="""
+DNS.%(ID)s = %(SAN)s
 """
 
 
@@ -148,7 +151,16 @@ def gencert(nodes):
 		with open (ca_file_paths.get('conf'), 'w') as config:
 			config.write(OPENSSL_CONFIG_TEMPLATE % {'FQDN': node_fqdn})
 			if node_alt_name:
-				config.write(OPENSSL_SAN_TEMPLATE % {'SAN': node_alt_name})
+				config.write(OPENSSL_SAN_TEMPLATE_HEADER)
+				if type(node_alt_name) is list:
+					
+					index=1
+					for name in node_alt_name:
+						config.write(OPENSSL_SAN % {'ID': str(index), 'SAN': name})
+						index = index + 1
+				elif type(node_alt_name) is str:
+					index=1
+					config.write(OPENSSL_SAN % {'ID': str(index), 'SAN': node_alt_name})
 
 
 
