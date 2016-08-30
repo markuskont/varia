@@ -255,10 +255,10 @@ def main():
         sys.exit(1)
     if not os.path.isfile(ALT_NAME_MAP_SOURCE):
         print "No configuration file with node definitions and subject alternative name mappings!"
-        print "Creating %s" % (ALT_NAME_MAP_SOURCE)
-        data = extract_nodes_from_puppet_env()
-        with open(ALT_NAME_MAP_SOURCE, 'w') as outfile:
-            outfile.write ( yaml.dump(data, default_flow_style=False))
+        #print "Creating %s" % (ALT_NAME_MAP_SOURCE)
+        #data = extract_nodes_from_puppet_env()
+        #with open(ALT_NAME_MAP_SOURCE, 'w') as outfile:
+        #    outfile.write ( yaml.dump(data, default_flow_style=False))
         print "Please verify data in %s and re-execute the script" % (ALT_NAME_MAP_SOURCE)
         sys.exit(1)
     else:
