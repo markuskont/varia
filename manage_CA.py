@@ -7,10 +7,9 @@ from stat import *
 # START SHARED LOGIC
 ####################
 
-def parse_arguments(environments):
+def parse_arguments():
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-e', '--environment', choices=environments, default='production', help='Puppet environment')
     parser.add_argument('-c', '--cadir', default='/tmp/CA/', help='Absolute path to CA root directory')
     parser.add_argument('-d', '--datadir', default='/tmp/CA/', help='Absolute path to root directory of generated client keys and certificates')
     parser.add_argument('-o', '--organization', default='Spin TEK AS', help='Certificate organization value')
@@ -30,10 +29,7 @@ def check_dir(path):
         os.chmod(path, folder_mask)
 
 # GLOBAL VARIABLES
-PUPPET_ROOT_DIR="/etc/puppet/environments/"
-PUPPET_ENV_DIRS = os.listdir(PUPPET_ROOT_DIR)
-ARGS = parse_arguments(PUPPET_ENV_DIRS)
-SELECTED_ENV = ARGS.environment
+ARGS = parse_arguments()
 CADIR = os.path.abspath(ARGS.cadir)
 DATADIR = os.path.abspath(ARGS.datadir)
 OPENSSL = '/usr/bin/openssl'
@@ -46,45 +42,7 @@ IP_REGEX = re.compile('(?:\d{1,3}\.){3}\d{1,3}')
 
 ALT_NAME_MAP_SOURCE = CADIR + '/' + 'node_map.yaml'
 
-############################
-# END SHARED LOGIC
-# START NODE EXTRACTION PART
-############################
-
-def recursive_file_gen(rootdir, pattern):
-    for root, dirs, filenames in os.walk(rootdir):
-        for filename in filenames:
-            if pattern.match(filename):
-                yield os.path.join(root, filename)
-
-def extract_data_from_file(files, pattern):
-
-    results = {}
-
-    for filename in files:
-        fd = open(filename)
-
-        for line in fd:
-            if pattern.match(line):
-                results[pattern.match(line).group(1)] = ''
-        fd.close()
-
-    return results
-
-def extract_nodes_from_puppet_env():
-
-    puppet_rootdir=PUPPET_ROOT_DIR + SELECTED_ENV + '/'
-
-
-    pattern_puppet_site_manifest = re.compile('site\S+\.pp')
-    pattern_puppet_node_definition = re.compile("^node\s+'(\S+)'\s*\{")
-
-    files = list(recursive_file_gen(puppet_rootdir, pattern_puppet_site_manifest))
-
-    return extract_data_from_file(files, pattern_puppet_node_definition)
-
 ##########################################
-# END NODE EXTRACTION PART
 # START OPENSSL PART
 # CREDIT GOES WHERE CREDIT IS DUE:
 # https://gist.github.com/toolness/3073310
@@ -169,12 +127,12 @@ def gencert(nodes):
                             config.write(OPENSSL_SAN % {'ID': str(dns_index), 'SAN': name})
                             dns_index = dns_index + 1
                 elif type(node_alt_name) is str:
-                    if IP_REGEX.match(name):
+                    if IP_REGEX.match(node_alt_name):
                         ip_index=1
                         config.write(OPENSSL_SAN_IP % {'ID': str(dns_index), 'SAN': node_alt_name})
                     else:
                         dns_index=1
-                        config.write(OPENSSL_SAN_DNS % {'ID': str(dns_index), 'SAN': node_alt_name})
+                        config.write(OPENSSL_SAN % {'ID': str(dns_index), 'SAN': node_alt_name})
 
 
 
@@ -255,10 +213,6 @@ def main():
         sys.exit(1)
     if not os.path.isfile(ALT_NAME_MAP_SOURCE):
         print "No configuration file with node definitions and subject alternative name mappings!"
-        #print "Creating %s" % (ALT_NAME_MAP_SOURCE)
-        #data = extract_nodes_from_puppet_env()
-        #with open(ALT_NAME_MAP_SOURCE, 'w') as outfile:
-        #    outfile.write ( yaml.dump(data, default_flow_style=False))
         print "Please verify data in %s and re-execute the script" % (ALT_NAME_MAP_SOURCE)
         sys.exit(1)
     else:
